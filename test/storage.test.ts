@@ -1,8 +1,8 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { Workout } from '../src/recorder/workout';
-import { exportFileName, workoutToCsv, workoutToJson } from '../src/storage/export';
-import { WorkoutStore } from '../src/storage/workoutStore';
+import type { Workout } from '../src/recording/workout';
+import { exportFileName, workoutToCsv, workoutToJson } from '../src/persistence/export';
+import { WorkoutStore } from '../src/persistence/indexeddb/workoutStore';
 import { formatDuration, formatKm, formatNumber } from '../src/ui/format';
 
 function workout(id: string, startedAt: string): Workout {

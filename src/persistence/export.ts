@@ -1,4 +1,4 @@
-import type { Workout, WorkoutSample } from '../recorder/workout';
+import type { Workout, WorkoutSample } from '../recording/workout';
 
 const CSV_COLUMNS: (keyof WorkoutSample)[] = [
   't',

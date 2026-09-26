@@ -1,15 +1,18 @@
-import { SimulatedBike } from './device/simulator';
-import type { BikeConnection, BikeInfo, ConnectionState, Notification } from './device/types';
-import { findPermittedBike, requestBike, WebBluetoothBike } from './device/webBluetooth';
-import { toHex } from './ftms/bytes';
-import { MachineStatusOpCode } from './ftms/machineInfo';
-import { uuidName } from './ftms/uuids';
-import { WorkoutRecorder } from './recorder/recorder';
-import type { Workout } from './recorder/workout';
-import type { WorkoutStore } from './storage/workoutStore';
-import { TelemetryEngine } from './telemetry/engine';
-import { Emitter } from './util/emitter';
-import { ScreenWakeLock } from './util/wakeLock';
+import { FtmsIndoorBikeAdapter, ftmsIndoorBikeFilter } from '../adapters/ftms-indoor-bike/adapter';
+import type { DeviceAdapter, DeviceInfo } from '../adapters/types';
+import type { WorkoutStore } from '../persistence/indexeddb/workoutStore';
+import { toHex } from '../protocol/ftms/bytes';
+import { uuidName } from '../protocol/ftms/uuids';
+import { WorkoutRecorder } from '../recording/recorder';
+import type { Workout } from '../recording/workout';
+import { TelemetryStream } from '../telemetry/stream';
+import { SimulatedTransport } from '../transport/simulated/simulator';
+import type { ConnectionState, GattNotification, Transport } from '../transport/types';
+import { findPermittedDevice, isWebBluetoothAvailable, requestDevice, WebBluetoothTransport } from '../transport/webBluetooth';
+import { Emitter } from '../util/emitter';
+import { ScreenWakeLock } from '../util/wakeLock';
+
+export type { ConnectionState };
 
 const LAST_BIKE_KEY = 'lastBike';
 const DRAFT_INTERVAL_MS = 15_000;
@@ -33,16 +36,16 @@ export type AppEvents = {
 };
 
 /**
- * Wires the layers together: Device Layer → Telemetry Engine → Recorder → Local Storage.
- * The UI only talks to this class.
+ * Application layer: wires Transport → Device Adapter → Canonical Telemetry → Recording →
+ * Persistence and offers use cases to the UI. Only this class knows concrete implementations.
  */
 export class App extends Emitter<AppEvents> {
-  readonly engine = new TelemetryEngine();
+  readonly telemetry = new TelemetryStream();
   readonly log: string[] = [];
   readonly capture: CapturedPacket[] = [];
 
-  private connection: BikeConnection | undefined;
-  private detachConnection: (() => void) | undefined;
+  private adapter: DeviceAdapter | undefined;
+  private detachDevice: (() => void) | undefined;
   private _recorder: WorkoutRecorder | undefined;
   private draftTimer: ReturnType<typeof setInterval> | undefined;
   private readonly wakeLock = new ScreenWakeLock();
@@ -50,17 +53,9 @@ export class App extends Emitter<AppEvents> {
 
   constructor(readonly store: WorkoutStore) {
     super();
-    this.engine.on('raw', (n) => this.capturePacket(n));
-    this.engine.on('sample', (s) => {
+    this.telemetry.on('sample', (s) => {
       this._recorder?.addSample(s);
       this.emit('change', undefined);
-    });
-    this.engine.on('trainingStatus', (s) => this.addLog(`Training status: ${s.name}${s.text ? ` (${s.text})` : ''}`));
-    this.engine.on('machineStatus', (s) => {
-      this.addLog(`Machine status: ${s.name}${s.stopOrPause ? ` (${s.stopOrPause})` : ''}`);
-      // Follow the console's pause button, so pedalling to restart does not need the screen.
-      if (s.opCode === MachineStatusOpCode.StoppedOrPausedByUser) this.pauseWorkout();
-      if (s.opCode === MachineStatusOpCode.StartedOrResumedByUser) this.resumeWorkout();
     });
   }
 
@@ -71,65 +66,83 @@ export class App extends Emitter<AppEvents> {
   // ── Connection ─────────────────────────────────────────────────────────────
 
   get connectionState(): ConnectionState {
-    return this.connection?.state ?? 'disconnected';
+    return this.adapter?.state ?? 'disconnected';
   }
 
-  get bikeInfo(): BikeInfo | undefined {
-    return this.connection?.info;
+  get bikeInfo(): DeviceInfo | undefined {
+    return this.adapter?.info;
+  }
+
+  /** Whether this browser can talk to Bluetooth devices at all. */
+  get bluetoothAvailable(): boolean {
+    return isWebBluetoothAvailable();
   }
 
   get rememberedBike(): RememberedBike | undefined {
     return this._rememberedBike;
   }
 
+  /** Protocol conformance checks of the connected device, for Diagnostics. */
+  diagnostics() {
+    return this.adapter?.diagnostics() ?? [];
+  }
+
   /** Opens the browser's Bluetooth chooser. Call from a click handler. */
   async connectBluetooth(): Promise<void> {
-    const device = await requestBike();
-    await this.use(new WebBluetoothBike(device));
+    const device = await requestDevice(ftmsIndoorBikeFilter());
+    await this.use(new WebBluetoothTransport(device));
   }
 
   /** Reconnects to the last bike without the chooser, where the browser allows it. */
   async reconnectRemembered(): Promise<boolean> {
     if (!this._rememberedBike) return false;
-    const device = await findPermittedBike(this._rememberedBike.id);
+    const device = await findPermittedDevice(this._rememberedBike.id);
     if (!device) return false;
-    await this.use(new WebBluetoothBike(device));
+    await this.use(new WebBluetoothTransport(device));
     return true;
   }
 
   async connectSimulator(): Promise<void> {
-    await this.use(new SimulatedBike());
+    await this.use(new SimulatedTransport(), true);
   }
 
   async disconnect(): Promise<void> {
-    await this.connection?.disconnect();
-    this.detachConnection?.();
-    this.connection = undefined;
+    await this.adapter?.disconnect();
+    this.detachDevice?.();
+    this.adapter = undefined;
     this.emit('change', undefined);
   }
 
-  private async use(connection: BikeConnection): Promise<void> {
+  private async use(transport: Transport, simulated = false): Promise<void> {
     await this.disconnect();
-    this.connection = connection;
+    const adapter = new FtmsIndoorBikeAdapter(transport, { simulated });
+    this.adapter = adapter;
     const offs = [
-      this.engine.attach(connection),
-      connection.on('state', (state) => {
+      transport.on('notification', (n) => this.capturePacket(n)),
+      adapter.on('sample', (s) => this.telemetry.push(s)),
+      adapter.on('state', (state) => {
         this.addLog(`Connection: ${state}`);
         this.emit('change', undefined);
       }),
-      connection.on('log', (line) => this.addLog(line)),
-      connection.on('info', (info) => {
+      adapter.on('log', (line) => this.addLog(line)),
+      adapter.on('info', (info) => {
         if (!info.simulated) void this.rememberBike({ id: info.id, name: info.name });
         this.emit('change', undefined);
       }),
+      adapter.on('deviceEvent', (e) => {
+        this.addLog(`Device: ${e.label}`);
+        // Follow the console's pause button, so pedalling to restart does not need the screen.
+        if (e.kind === 'paused' || e.kind === 'stopped') this.pauseWorkout();
+        if (e.kind === 'started') this.resumeWorkout();
+      }),
     ];
-    this.detachConnection = () => offs.forEach((off) => off());
+    this.detachDevice = () => offs.forEach((off) => off());
     try {
-      await connection.connect();
+      await adapter.connect();
     } catch (err) {
       this.addLog(`Connection failed: ${err instanceof Error ? err.message : String(err)}`);
-      this.detachConnection();
-      this.connection = undefined;
+      this.detachDevice();
+      this.adapter = undefined;
       this.emit('change', undefined);
       throw err;
     }
@@ -225,7 +238,7 @@ export class App extends Emitter<AppEvents> {
     this.emit('change', undefined);
   }
 
-  private capturePacket(n: Notification) {
+  private capturePacket(n: GattNotification) {
     this.capture.push({ receivedAt: n.receivedAt, characteristic: uuidName(n.characteristic), hex: toHex(n.value) });
     if (this.capture.length > MAX_CAPTURED_PACKETS) this.capture.splice(0, this.capture.length - MAX_CAPTURED_PACKETS);
   }
@@ -237,6 +250,7 @@ export class App extends Emitter<AppEvents> {
         createdAt: new Date().toISOString(),
         userAgent: navigator.userAgent,
         bike: this.bikeInfo,
+        diagnostics: this.diagnostics(),
         log: this.log,
         packets: this.capture,
       },

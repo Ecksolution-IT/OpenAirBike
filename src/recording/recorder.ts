@@ -1,4 +1,4 @@
-import type { TelemetrySample } from '../telemetry/engine';
+import type { TelemetrySample } from '../telemetry/types';
 import { summarize, type Workout, type WorkoutDevice, type WorkoutSample } from './workout';
 
 export type RecorderState = 'idle' | 'recording' | 'paused' | 'finished';
@@ -121,8 +121,8 @@ export class WorkoutRecorder {
   addSample(s: TelemetrySample): void {
     if (this._state !== 'recording' || s.at < this.segmentStart) return;
 
-    this.distance.add(s.at, s.distanceM, s.speedKmh === undefined ? undefined : s.speedKmh / 3.6);
-    this.energy.add(s.at, s.energyKcal, s.powerW === undefined ? undefined : Math.max(0, s.powerW) * KCAL_PER_WATT_SECOND);
+    this.distance.add(s.at, s.deviceCounters.distanceM, s.speedKmh === undefined ? undefined : s.speedKmh / 3.6);
+    this.energy.add(s.at, s.deviceCounters.energyKcal, s.powerW === undefined ? undefined : Math.max(0, s.powerW) * KCAL_PER_WATT_SECOND);
 
     this.samples.push({
       t: round(this.elapsedS(s.at), 1)!,

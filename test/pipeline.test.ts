@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { powerFromCadence, SimulatedBike } from '../src/device/simulator';
-import { encodeIndoorBikeData } from '../src/ftms/indoorBikeData';
-import { FtmsCharacteristic } from '../src/ftms/uuids';
-import { WorkoutRecorder } from '../src/recorder/recorder';
-import { TelemetryEngine, STALE_AFTER_MS, type TelemetrySample } from '../src/telemetry/engine';
+import { FtmsIndoorBikeAdapter } from '../src/adapters/ftms-indoor-bike/adapter';
+import { WorkoutRecorder } from '../src/recording/recorder';
+import { STALE_AFTER_MS, TelemetryStream } from '../src/telemetry/stream';
+import type { TelemetrySample } from '../src/telemetry/types';
+import { powerFromCadence, SimulatedTransport } from '../src/transport/simulated/simulator';
 
 function seeded(seed = 1) {
   return () => {
@@ -12,62 +12,77 @@ function seeded(seed = 1) {
   };
 }
 
-describe('simulator → parser → telemetry engine → recorder', () => {
-  it.each([false, true])('produces complete samples (splitRecords=%s)', (splitRecords) => {
-    const bike = new SimulatedBike({ splitRecords, random: seeded() });
-    const engine = new TelemetryEngine();
-    engine.attach(bike);
-    const samples: TelemetrySample[] = [];
-    const raw: number[] = [];
-    engine.on('sample', (s) => samples.push(s));
-    engine.on('raw', (n) => raw.push(n.characteristic));
+async function connectedSimulator(options: { splitRecords?: boolean; seed?: number } = {}) {
+  const transport = new SimulatedTransport({ autoRun: false, splitRecords: options.splitRecords, random: seeded(options.seed) });
+  const adapter = new FtmsIndoorBikeAdapter(transport, { simulated: true });
+  await adapter.connect();
+  return { transport, adapter };
+}
 
-    for (let i = 0; i < 10; i++) bike.step();
+describe('simulated transport → FTMS adapter → canonical telemetry → recording', () => {
+  it.each([false, true])('produces complete canonical samples (splitRecords=%s)', async (splitRecords) => {
+    const { transport, adapter } = await connectedSimulator({ splitRecords });
+    const samples: TelemetrySample[] = [];
+    let notifications = 0;
+    adapter.on('sample', (s) => samples.push(s));
+    transport.on('notification', () => notifications++);
+
+    for (let i = 0; i < 10; i++) transport.step();
 
     expect(samples).toHaveLength(10);
-    expect(raw).toHaveLength(splitRecords ? 20 : 10);
+    expect(notifications).toBe(splitRecords ? 20 : 10);
     for (const s of samples) {
       expect(s.cadenceRpm).toBeGreaterThan(0);
       expect(s.powerW).toBeCloseTo(powerFromCadence(s.cadenceRpm!), -1);
       expect(s.speedKmh).toBeGreaterThan(0);
-      expect(s.distanceM).toBeDefined();
-      expect(s.energyKcal).toBeDefined();
+      expect(s.deviceCounters.distanceM).toBeDefined();
+      expect(s.deviceCounters.energyKcal).toBeDefined();
     }
-    expect(samples[9].distanceM!).toBeGreaterThan(samples[0].distanceM!);
+    expect(samples[9].deviceCounters.distanceM!).toBeGreaterThan(samples[0].deviceCounters.distanceM!);
   });
 
-  it('records a simulated ride', () => {
-    const bike = new SimulatedBike({ random: seeded(7) });
-    const engine = new TelemetryEngine();
-    engine.attach(bike);
+  it('describes the device through the adapter', async () => {
+    const { adapter } = await connectedSimulator();
+    expect(adapter.state).toBe('connected');
+    expect(adapter.info).toMatchObject({
+      id: 'simulator',
+      profileId: 'ftms-indoor-bike',
+      manufacturer: 'OpenAirBike',
+      model: 'Simulator',
+      simulated: true,
+      capabilities: ['speed', 'power', 'cadence', 'distance', 'energy', 'elapsedTime'],
+    });
+  });
+
+  it('records a simulated ride', async () => {
+    const { transport, adapter } = await connectedSimulator({ seed: 7 });
+    const stream = new TelemetryStream();
+    adapter.on('sample', (s) => stream.push(s));
     const recorder = new WorkoutRecorder();
     recorder.start(0);
-    engine.on('sample', (s) => recorder.addSample(s));
-    for (let i = 0; i < 60; i++) bike.step();
+    stream.on('sample', (s) => recorder.addSample(s));
+    for (let i = 0; i < 60; i++) transport.step();
     const w = recorder.stop();
     expect(w.samples.length).toBe(60);
     expect(w.summary.maxPowerW!).toBeGreaterThan(w.summary.avgPowerW!);
     expect(w.summary.distanceM).toBeGreaterThan(0);
   });
 
-  it('dispatches training and machine status', () => {
-    const engine = new TelemetryEngine();
-    const events: string[] = [];
-    engine.on('trainingStatus', (s) => events.push(s.name));
-    engine.on('machineStatus', (s) => events.push(s.name));
-    const notify = (characteristic: number, bytes: number[]) =>
-      engine.handle({ characteristic, value: new DataView(Uint8Array.from(bytes).buffer), receivedAt: 0 });
-    notify(FtmsCharacteristic.TrainingStatus, [0x00, 0x01]);
-    notify(FtmsCharacteristic.FitnessMachineStatus, [0x04]);
-    expect(events).toEqual(['Idle', 'Started or Resumed by the User']);
+  it('feeds the conformance checks from the live data', async () => {
+    const { transport, adapter } = await connectedSimulator();
+    for (let i = 0; i < 12; i++) transport.step();
+    const report = adapter.diagnostics();
+    expect(report.find((c) => c.title === 'Complete Data Records')?.status).toBe('pass');
+    expect(report.filter((c) => c.status === 'fail')).toEqual([]);
   });
+});
 
+describe('TelemetryStream', () => {
   it('reports stale data as unavailable', () => {
-    const engine = new TelemetryEngine();
-    const bytes = encodeIndoorBikeData({ moreData: false, instantaneousSpeedKmh: 20 });
-    engine.handle({ characteristic: FtmsCharacteristic.IndoorBikeData, value: new DataView(bytes.buffer), receivedAt: 1000 });
-    expect(engine.current(1000 + STALE_AFTER_MS)?.speedKmh).toBe(20);
-    expect(engine.current(1001 + STALE_AFTER_MS)).toBeUndefined();
-    expect(engine.latest?.speedKmh).toBe(20);
+    const stream = new TelemetryStream();
+    stream.push({ at: 1000, speedKmh: 20, deviceCounters: {} });
+    expect(stream.current(1000 + STALE_AFTER_MS)?.speedKmh).toBe(20);
+    expect(stream.current(1001 + STALE_AFTER_MS)).toBeUndefined();
+    expect(stream.latest?.speedKmh).toBe(20);
   });
 });

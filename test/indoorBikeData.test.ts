@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { fromHex } from '../src/ftms/bytes';
-import { encodeIndoorBikeData, parseIndoorBikeData, type IndoorBikeData } from '../src/ftms/indoorBikeData';
+import { fromHex } from '../src/protocol/ftms/bytes';
+import { encodeIndoorBikeData, parseIndoorBikeData, type IndoorBikeData } from '../src/protocol/ftms/indoorBikeData';
 
 describe('parseIndoorBikeData', () => {
   it('parses the mandatory Instantaneous Speed when More Data is 0', () => {

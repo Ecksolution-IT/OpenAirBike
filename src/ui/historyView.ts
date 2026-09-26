@@ -1,6 +1,6 @@
-import type { App } from '../app';
-import type { Workout } from '../recorder/workout';
-import { download, exportFileName, workoutToCsv, workoutToJson } from '../storage/export';
+import type { App } from '../app/app';
+import type { Workout } from '../recording/workout';
+import { download, exportFileName, workoutToCsv, workoutToJson } from '../persistence/export';
 import { h, navigate, type View } from './dom';
 import { formatDate, formatDateTime, formatDuration, formatKm, formatNumber } from './format';
 

@@ -1,7 +1,6 @@
-import type { App } from '../app';
-import type { ConnectionState } from '../device/types';
-import { isWebBluetoothAvailable } from '../device/webBluetooth';
-import { download } from '../storage/export';
+import type { App } from '../app/app';
+import type { ConnectionState } from '../app/app';
+import { download } from '../persistence/export';
 import { h, navigate, setText, type View } from './dom';
 import { formatDateTime, formatDuration, formatNumber } from './format';
 
@@ -58,12 +57,16 @@ export function homeView(app: App): View {
     const resumeButton = h('button', { class: 'primary huge', onclick: () => navigate('#/live') }, 'Back to workout');
 
     const diagInfo = h('pre');
+    const diagConformance = h('table', { class: 'conformance' });
     const diagLog = h('pre', { class: 'log' });
     const diagPackets = h('pre', { class: 'log' });
     const diagnostics = h('details', { class: 'card' },
       h('summary', {}, 'Diagnostics'),
       h('p', { class: 'muted' }, 'What the bike reports over FTMS. A packet capture helps to support new bikes and firmware.'),
       diagInfo,
+      h('h3', {}, 'FTMS conformance'),
+      h('p', { class: 'muted' }, 'Observed behaviour checked against the Bluetooth SIG FTMS test suite and ICS. Passive checks only, not a qualification result.'),
+      diagConformance,
       h('h3', {}, 'Log'), diagLog,
       h('h3', {}, 'Latest packets'), diagPackets,
       h('button', { class: 'secondary', onclick: () =>
@@ -72,7 +75,7 @@ export function homeView(app: App): View {
 
     const view = h('div', { class: 'stack' },
       h('header', { class: 'title' }, h('h1', {}, 'OPENAIRBIKE')),
-      !isWebBluetoothAvailable() &&
+      !app.bluetoothAvailable &&
         h('div', { class: 'card warning' },
           h('p', {}, 'This browser does not support Web Bluetooth. Use Chrome or Edge on desktop or Android, served over HTTPS or localhost.'),
           h('p', {}, 'You can still try OpenAirBike with the demo bike.'),
@@ -92,6 +95,22 @@ export function homeView(app: App): View {
     );
     root.append(view);
 
+    let conformanceKey = '';
+    const renderConformance = () => {
+      const checks = app.diagnostics();
+      const key = JSON.stringify(checks);
+      if (key === conformanceKey) return;
+      conformanceKey = key;
+      diagConformance.replaceChildren(
+        h('tbody', {}, checks.map((c) =>
+          h('tr', {},
+            h('td', {}, h('span', { class: `status ${c.status}` }, c.status)),
+            h('td', {}, h('strong', {}, c.title), h('br'), h('span', { class: 'muted' }, c.detail), h('br'), h('code', {}, c.id)),
+          ),
+        )),
+      );
+    };
+
     let actionsKey = '';
     const renderActions = () => {
       const state = app.connectionState;
@@ -102,7 +121,7 @@ export function homeView(app: App): View {
 
       const buttons: HTMLElement[] = [];
       if (state === 'disconnected') {
-        if (isWebBluetoothAvailable()) {
+        if (app.bluetoothAvailable) {
           buttons.push(h('button', { onclick: run(() => app.connectBluetooth()) }, 'Connect bike'));
           if (remembered) {
             buttons.push(h('button', { class: 'secondary', onclick: run(async () => {
@@ -126,7 +145,7 @@ export function homeView(app: App): View {
       setText(bikeName, info ? [info.name, info.manufacturer, info.model].filter(Boolean).join(' · ') : '');
       renderActions();
 
-      const s = app.engine.current();
+      const s = app.telemetry.current();
       preview.hidden = !s;
       if (s) setText(preview, `${formatNumber(s.powerW)} W · ${formatNumber(s.cadenceRpm)} RPM · ${formatNumber(s.speedKmh, 1)} km/h`);
 
@@ -136,6 +155,7 @@ export function homeView(app: App): View {
 
       if (diagnostics.open) {
         setText(diagInfo, JSON.stringify(info ?? { status: 'no bike connected' }, null, 2));
+        renderConformance();
         setText(diagLog, app.log.slice(-40).join('\n'));
         setText(
           diagPackets,

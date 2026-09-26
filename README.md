@@ -334,14 +334,16 @@ v0.1 is a browser app written in TypeScript. It talks to the bike through
 [Web Bluetooth](https://developer.mozilla.org/docs/Web/API/Web_Bluetooth_API), so there is nothing to
 install and no server: the app is a set of static files, and workouts stay in the browser's IndexedDB.
 
-| Layer            | Code                        | Responsibility                                                                              |
-| ---------------- | --------------------------- | ------------------------------------------------------------------------------------------- |
-| Device Layer     | `src/device/`               | Discover, connect, reconnect with backoff, subscribe to notifications. Includes a simulator. |
-| FTMS Parser      | `src/ftms/`                 | Indoor Bike Data, Data Record reassembly (More Data), Feature, Training / Machine Status.    |
-| Telemetry Engine | `src/telemetry/`            | Turns raw notifications into complete, normalized samples; detects stale data.             |
-| Recorder         | `src/recorder/`             | Start / pause / resume / stop, distance and calorie accounting, workout summary.           |
-| Local Storage    | `src/storage/`              | IndexedDB workouts, crash-recovery draft, JSON / CSV export.                                |
-| Dashboard / UI   | `src/ui/`, `src/app.ts`     | Connect screen, live training screen, summary, history.                                     |
+| Layer               | Code                                | Responsibility                                                              |
+| ------------------- | ----------------------------------- | --------------------------------------------------------------------------- |
+| Transport           | `src/transport/`                    | Web Bluetooth connect / reconnect, GATT read and subscribe. Bytes only. Simulator as a transport fake. |
+| Protocol            | `src/protocol/ftms/`                | FTMS codecs, Data Record reassembly, conformance checks. No I/O.            |
+| Device Adapter      | `src/adapters/`                     | FTMS indoor bike → Canonical Telemetry; device profiles (Rogue Echo Bike V3, generic FTMS). |
+| Canonical Telemetry | `src/telemetry/`                    | Device-independent samples (km/h, m, W, kcal, 1/min) and live stream.       |
+| Recording           | `src/recording/`                    | Start / pause / resume / stop, distance and calorie accounting, summary.    |
+| Persistence         | `src/persistence/`                  | IndexedDB workouts and JSON / CSV export (SQLite replaces it, see the plan). |
+| Application         | `src/app/`                          | Wires the layers, offers use cases to the UI.                               |
+| UI                  | `src/ui/`                           | Connect screen, live training screen, summary, history, diagnostics.        |
 
 The FTMS implementation follows the Bluetooth SIG *Fitness Machine Service* and *Fitness Machine Profile*
 v1.0.1 (collector role). Notable details:
@@ -355,6 +357,13 @@ v1.0.1 (collector role). Notable details:
   speed and power.
 * When the console reports "stopped / paused by the user" or "started / resumed" via Fitness Machine
   Status, the workout pauses or resumes with it.
+* **Diagnostics → FTMS conformance** checks what the bike sends against the Bluetooth SIG FTMS test
+  suite (FTMS.TS) and ICS: complete Data Records, reserved bits, fields matching the Fitness Machine
+  Feature bits, Elapsed Time across link loss. The result is included in every packet capture.
+
+Requirements, sources and their mapping to the code: [`docs/ftms-notes.md`](docs/ftms-notes.md).
+Architecture decisions: [`docs/decisions.md`](docs/decisions.md); current plan:
+[`docs/plan-first-technical-goal.md`](docs/plan-first-technical-goal.md).
 
 ---
 
@@ -491,7 +500,7 @@ npm run build      # static files in dist/, host them on any HTTPS static host
 
 Workouts are stored only in your browser (IndexedDB). Each workout can be exported as JSON or CSV,
 and the history page exports everything as one JSON file. The JSON format is documented in
-[`src/recorder/workout.ts`](src/recorder/workout.ts): a summary plus one sample per bike notification
+[`src/recording/workout.ts`](src/recording/workout.ts): a summary plus one sample per bike notification
 (active time, power, cadence, speed, heart rate, cumulative distance and calories).
 
 A workout in progress is saved as a draft every 15 seconds. If the browser closes during a ride, the
@@ -519,7 +528,9 @@ Development guidelines will be added as the architecture stabilizes.
 
 ## License
 
-License to be determined before the first public release.
+OpenAirBike is licensed under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 Ecksolution-IT
 
 ---
 

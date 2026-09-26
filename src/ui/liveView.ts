@@ -1,4 +1,4 @@
-import type { App } from '../app';
+import type { App } from '../app/app';
 import { h, navigate, setText, type View } from './dom';
 import { formatDuration, formatKm, formatNumber } from './format';
 
@@ -69,13 +69,14 @@ export function liveView(app: App): View {
       ),
     );
 
-    // Heart rate only when the bike provides it; otherwise that slot shows speed.
+    // Heart rate only when the bike supports or sends it; otherwise that slot shows speed.
     let heartRateSeen = false;
 
     const update = () => {
       const now = Date.now();
-      const s = app.engine.current(now);
+      const s = app.telemetry.current(now);
       if (s?.heartRateBpm !== undefined) heartRateSeen = true;
+      if (app.bikeInfo?.capabilities?.includes('heartRate')) heartRateSeen = true;
 
       setText(power.value, formatNumber(s?.powerW));
       setText(cadence.value, formatNumber(s?.cadenceRpm));
