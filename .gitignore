@@ -3,3 +3,6 @@ dist/
 coverage/
 *.log
 .DS_Store
+
+# Local reference projects (knowledge sources only, never part of the codebase)
+reference/
