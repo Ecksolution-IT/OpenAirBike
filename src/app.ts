@@ -2,8 +2,9 @@ import { SimulatedBike } from './device/simulator';
 import type { BikeConnection, BikeInfo, ConnectionState, Notification } from './device/types';
 import { findPermittedBike, requestBike, WebBluetoothBike } from './device/webBluetooth';
 import { toHex } from './ftms/bytes';
+import { ConformanceMonitor } from './ftms/conformance';
 import { MachineStatusOpCode } from './ftms/machineInfo';
-import { uuidName } from './ftms/uuids';
+import { FtmsCharacteristic, uuidName } from './ftms/uuids';
 import { WorkoutRecorder } from './recorder/recorder';
 import type { Workout } from './recorder/workout';
 import type { WorkoutStore } from './storage/workoutStore';
@@ -40,6 +41,8 @@ export class App extends Emitter<AppEvents> {
   readonly engine = new TelemetryEngine();
   readonly log: string[] = [];
   readonly capture: CapturedPacket[] = [];
+  /** Checks the bike's FTMS behaviour against the SIG test suite, see src/ftms/conformance.ts. */
+  readonly conformance = new ConformanceMonitor();
 
   private connection: BikeConnection | undefined;
   private detachConnection: (() => void) | undefined;
@@ -50,7 +53,10 @@ export class App extends Emitter<AppEvents> {
 
   constructor(readonly store: WorkoutStore) {
     super();
-    this.engine.on('raw', (n) => this.capturePacket(n));
+    this.engine.on('raw', (n) => {
+      this.capturePacket(n);
+      if (n.characteristic === FtmsCharacteristic.IndoorBikeData) this.conformance.onIndoorBikeData(n.value);
+    });
     this.engine.on('sample', (s) => {
       this._recorder?.addSample(s);
       this.emit('change', undefined);
@@ -111,14 +117,17 @@ export class App extends Emitter<AppEvents> {
   private async use(connection: BikeConnection): Promise<void> {
     await this.disconnect();
     this.connection = connection;
+    this.conformance.reset();
     const offs = [
       this.engine.attach(connection),
       connection.on('state', (state) => {
+        if (state === 'reconnecting') this.conformance.onLinkLoss();
         this.addLog(`Connection: ${state}`);
         this.emit('change', undefined);
       }),
       connection.on('log', (line) => this.addLog(line)),
       connection.on('info', (info) => {
+        this.conformance.setDevice(info);
         if (!info.simulated) void this.rememberBike({ id: info.id, name: info.name });
         this.emit('change', undefined);
       }),
@@ -237,6 +246,7 @@ export class App extends Emitter<AppEvents> {
         createdAt: new Date().toISOString(),
         userAgent: navigator.userAgent,
         bike: this.bikeInfo,
+        conformance: this.conformance.report(),
         log: this.log,
         packets: this.capture,
       },

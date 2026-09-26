@@ -1,6 +1,10 @@
+import { ByteWriter } from '../ftms/bytes';
 import { encodeIndoorBikeData, type IndoorBikeData } from '../ftms/indoorBikeData';
+import { parseFitnessMachineFeature } from '../ftms/machineInfo';
 import { FtmsCharacteristic } from '../ftms/uuids';
 import { BikeConnection, type BikeInfo, type ConnectionState } from './types';
+
+const SIMULATED_FEATURES = (1 << 1) | (1 << 2) | (1 << 9) | (1 << 12) | (1 << 14);
 
 export interface SimulatorOptions {
   /** Notification interval in ms. FTMS suggests about once per second (§4.9.1). */
@@ -40,6 +44,9 @@ export class SimulatedBike extends BikeConnection {
     manufacturer: 'OpenAirBike',
     model: 'Simulator',
     characteristics: ['Fitness Machine Feature', 'Indoor Bike Data'],
+    characteristicIds: [FtmsCharacteristic.FitnessMachineFeature, FtmsCharacteristic.IndoorBikeData],
+    // Cadence, Total Distance, Expended Energy, Elapsed Time, Power Measurement: what step() sends.
+    features: parseFitnessMachineFeature(new ByteWriter().u32(SIMULATED_FEATURES).u32(0).toUint8Array()),
     simulated: true,
   };
 

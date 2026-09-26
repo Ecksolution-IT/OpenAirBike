@@ -337,7 +337,7 @@ install and no server: the app is a set of static files, and workouts stay in th
 | Layer            | Code                        | Responsibility                                                                              |
 | ---------------- | --------------------------- | ------------------------------------------------------------------------------------------- |
 | Device Layer     | `src/device/`               | Discover, connect, reconnect with backoff, subscribe to notifications. Includes a simulator. |
-| FTMS Parser      | `src/ftms/`                 | Indoor Bike Data, Data Record reassembly (More Data), Feature, Training / Machine Status.    |
+| FTMS Parser      | `src/ftms/`                 | Indoor Bike Data, Data Record reassembly, Feature, Training / Machine Status, conformance.  |
 | Telemetry Engine | `src/telemetry/`            | Turns raw notifications into complete, normalized samples; detects stale data.             |
 | Recorder         | `src/recorder/`             | Start / pause / resume / stop, distance and calorie accounting, workout summary.           |
 | Local Storage    | `src/storage/`              | IndexedDB workouts, crash-recovery draft, JSON / CSV export.                                |
@@ -355,6 +355,11 @@ v1.0.1 (collector role). Notable details:
   speed and power.
 * When the console reports "stopped / paused by the user" or "started / resumed" via Fitness Machine
   Status, the workout pauses or resumes with it.
+* **Diagnostics → FTMS conformance** checks what the bike sends against the Bluetooth SIG FTMS test
+  suite (FTMS.TS) and ICS: complete Data Records, reserved bits, fields matching the Fitness Machine
+  Feature bits, Elapsed Time across link loss. The result is included in every packet capture.
+
+Requirements, sources and their mapping to the code: [`docs/ftms-notes.md`](docs/ftms-notes.md).
 
 ---
 

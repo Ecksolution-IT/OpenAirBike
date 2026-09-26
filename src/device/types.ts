@@ -14,6 +14,8 @@ export interface BikeInfo {
   software?: string;
   /** Names of the FTMS characteristics the bike exposes. */
   characteristics: string[];
+  /** 16-bit UUIDs of the FTMS characteristics the bike exposes. */
+  characteristicIds: number[];
   features?: FitnessMachineFeature;
   simulated?: boolean;
 }

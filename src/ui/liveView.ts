@@ -69,13 +69,14 @@ export function liveView(app: App): View {
       ),
     );
 
-    // Heart rate only when the bike provides it; otherwise that slot shows speed.
+    // Heart rate only when the bike supports or sends it; otherwise that slot shows speed.
     let heartRateSeen = false;
 
     const update = () => {
       const now = Date.now();
       const s = app.engine.current(now);
       if (s?.heartRateBpm !== undefined) heartRateSeen = true;
+      if (app.bikeInfo?.features?.machineFeatures.includes('Heart Rate Measurement')) heartRateSeen = true;
 
       setText(power.value, formatNumber(s?.powerW));
       setText(cadence.value, formatNumber(s?.cadenceRpm));

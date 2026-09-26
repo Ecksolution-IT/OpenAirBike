@@ -134,6 +134,7 @@ export class WebBluetoothBike extends BikeConnection {
       id: this.device.id,
       name: this.device.name ?? 'Unknown bike',
       characteristics: names,
+      characteristicIds: [...characteristics.keys()],
     };
 
     const feature = characteristics.get(FtmsCharacteristic.FitnessMachineFeature);
@@ -143,6 +144,11 @@ export class WebBluetoothBike extends BikeConnection {
         this.emit('log', `Features: ${info.features.machineFeatures.join(', ') || 'none'}`);
       } catch (err) {
         this.emit('log', `Could not read Fitness Machine Feature: ${String(err)}`);
+      }
+      // FTMS 1.0.1 servers indicate the characteristic when their features change (ICS FTMS 4/44).
+      if (feature.properties.indicate) {
+        feature.addEventListener('characteristicvaluechanged', this.onValue);
+        await feature.startNotifications().catch((err) => this.emit('log', `Feature indications unavailable: ${String(err)}`));
       }
     }
 
@@ -198,8 +204,13 @@ export class WebBluetoothBike extends BikeConnection {
     const short = shortUuid(c.uuid);
     if (!c.value || short === undefined) return;
     // Copy: the browser may reuse the underlying buffer for the next notification.
-    const copy = c.value.buffer.slice(c.value.byteOffset, c.value.byteOffset + c.value.byteLength);
-    this.emit('notification', { characteristic: short, value: new DataView(copy), receivedAt: Date.now() });
+    const value = new DataView(c.value.buffer.slice(c.value.byteOffset, c.value.byteOffset + c.value.byteLength));
+    this.emit('notification', { characteristic: short, value, receivedAt: Date.now() });
+    if (short === FtmsCharacteristic.FitnessMachineFeature && this._info) {
+      this._info = { ...this._info, features: parseFitnessMachineFeature(value) };
+      this.emit('log', `Features changed: ${this._info.features!.machineFeatures.join(', ') || 'none'}`);
+      this.emit('info', this._info);
+    }
   };
 
   private async onDisconnected() {

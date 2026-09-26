@@ -336,3 +336,47 @@ main:has(.live) {
   flex-direction: column;
   gap: 16px;
 }
+
+/* ── Diagnostics: conformance ──────────────────────────── */
+
+.conformance {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.conformance td {
+  vertical-align: top;
+  padding: 6px 8px 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.conformance code {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.status {
+  display: inline-block;
+  min-width: 5.5em;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: #111;
+  background: var(--muted);
+}
+
+.status.pass {
+  background: var(--ok);
+}
+
+.status.fail {
+  background: var(--danger);
+}
+
+.status.warn {
+  background: var(--warn);
+}

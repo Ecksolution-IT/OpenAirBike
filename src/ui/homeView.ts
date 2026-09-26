@@ -58,12 +58,16 @@ export function homeView(app: App): View {
     const resumeButton = h('button', { class: 'primary huge', onclick: () => navigate('#/live') }, 'Back to workout');
 
     const diagInfo = h('pre');
+    const diagConformance = h('table', { class: 'conformance' });
     const diagLog = h('pre', { class: 'log' });
     const diagPackets = h('pre', { class: 'log' });
     const diagnostics = h('details', { class: 'card' },
       h('summary', {}, 'Diagnostics'),
       h('p', { class: 'muted' }, 'What the bike reports over FTMS. A packet capture helps to support new bikes and firmware.'),
       diagInfo,
+      h('h3', {}, 'FTMS conformance'),
+      h('p', { class: 'muted' }, 'Observed behaviour checked against the Bluetooth SIG FTMS test suite and ICS. Passive checks only, not a qualification result.'),
+      diagConformance,
       h('h3', {}, 'Log'), diagLog,
       h('h3', {}, 'Latest packets'), diagPackets,
       h('button', { class: 'secondary', onclick: () =>
@@ -91,6 +95,22 @@ export function homeView(app: App): View {
       diagnostics,
     );
     root.append(view);
+
+    let conformanceKey = '';
+    const renderConformance = () => {
+      const checks = app.conformance.report();
+      const key = JSON.stringify(checks);
+      if (key === conformanceKey) return;
+      conformanceKey = key;
+      diagConformance.replaceChildren(
+        h('tbody', {}, checks.map((c) =>
+          h('tr', {},
+            h('td', {}, h('span', { class: `status ${c.status}` }, c.status)),
+            h('td', {}, h('strong', {}, c.title), h('br'), h('span', { class: 'muted' }, c.detail), h('br'), h('code', {}, c.id)),
+          ),
+        )),
+      );
+    };
 
     let actionsKey = '';
     const renderActions = () => {
@@ -136,6 +156,7 @@ export function homeView(app: App): View {
 
       if (diagnostics.open) {
         setText(diagInfo, JSON.stringify(info ?? { status: 'no bike connected' }, null, 2));
+        renderConformance();
         setText(diagLog, app.log.slice(-40).join('\n'));
         setText(
           diagPackets,
