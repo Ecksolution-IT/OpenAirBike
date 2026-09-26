@@ -1,7 +1,7 @@
-import type { App } from '../app';
-import type { ConnectionState } from '../device/types';
-import { isWebBluetoothAvailable } from '../device/webBluetooth';
-import { download } from '../storage/export';
+import type { App } from '../app/app';
+import type { ConnectionState } from '../transport/types';
+import { isWebBluetoothAvailable } from '../transport/webBluetooth';
+import { download } from '../persistence/export';
 import { h, navigate, setText, type View } from './dom';
 import { formatDateTime, formatDuration, formatNumber } from './format';
 

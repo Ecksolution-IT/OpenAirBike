@@ -1,8 +1,8 @@
-import { ByteWriter } from '../ftms/bytes';
-import { encodeIndoorBikeData, type IndoorBikeData } from '../ftms/indoorBikeData';
-import { parseFitnessMachineFeature } from '../ftms/machineInfo';
-import { FtmsCharacteristic } from '../ftms/uuids';
-import { BikeConnection, type BikeInfo, type ConnectionState } from './types';
+import { ByteWriter } from '../../protocol/ftms/bytes';
+import { encodeIndoorBikeData, type IndoorBikeData } from '../../protocol/ftms/indoorBikeData';
+import { parseFitnessMachineFeature } from '../../protocol/ftms/machineInfo';
+import { FtmsCharacteristic } from '../../protocol/ftms/uuids';
+import { BikeConnection, type BikeInfo, type ConnectionState } from '../types';
 
 const SIMULATED_FEATURES = (1 << 1) | (1 << 2) | (1 << 9) | (1 << 12) | (1 << 14);
 

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter, fromHex } from '../src/ftms/bytes';
-import { ConformanceMonitor, type ConformanceCheck } from '../src/ftms/conformance';
-import { encodeIndoorBikeData, type IndoorBikeData } from '../src/ftms/indoorBikeData';
-import { parseFitnessMachineFeature } from '../src/ftms/machineInfo';
-import { FtmsCharacteristic } from '../src/ftms/uuids';
+import { ByteWriter, fromHex } from '../src/protocol/ftms/bytes';
+import { ConformanceMonitor, type ConformanceCheck } from '../src/protocol/ftms/conformance';
+import { encodeIndoorBikeData, type IndoorBikeData } from '../src/protocol/ftms/indoorBikeData';
+import { parseFitnessMachineFeature } from '../src/protocol/ftms/machineInfo';
+import { FtmsCharacteristic } from '../src/protocol/ftms/uuids';
 
 const features = (machine: number, target = 0) =>
   parseFitnessMachineFeature(new ByteWriter().u32(machine).u32(target).toUint8Array());

@@ -1,4 +1,4 @@
-import type { FitnessMachineFeature } from '../ftms/machineInfo';
+import type { FitnessMachineFeature } from '../protocol/ftms/machineInfo';
 import { Emitter } from '../util/emitter';
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';

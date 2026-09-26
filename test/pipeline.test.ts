@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { powerFromCadence, SimulatedBike } from '../src/device/simulator';
-import { encodeIndoorBikeData } from '../src/ftms/indoorBikeData';
-import { FtmsCharacteristic } from '../src/ftms/uuids';
-import { WorkoutRecorder } from '../src/recorder/recorder';
+import { powerFromCadence, SimulatedBike } from '../src/transport/simulated/simulator';
+import { encodeIndoorBikeData } from '../src/protocol/ftms/indoorBikeData';
+import { FtmsCharacteristic } from '../src/protocol/ftms/uuids';
+import { WorkoutRecorder } from '../src/recording/recorder';
 import { TelemetryEngine, STALE_AFTER_MS, type TelemetrySample } from '../src/telemetry/engine';
 
 function seeded(seed = 1) {

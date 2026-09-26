@@ -1,8 +1,8 @@
-import type { BikeConnection, Notification } from '../device/types';
-import { DataRecordAssembler } from '../ftms/dataRecord';
-import { parseIndoorBikeData } from '../ftms/indoorBikeData';
-import { parseMachineStatus, parseTrainingStatus, type MachineStatus, type TrainingStatus } from '../ftms/machineInfo';
-import { FtmsCharacteristic } from '../ftms/uuids';
+import type { BikeConnection, Notification } from '../transport/types';
+import { DataRecordAssembler } from '../protocol/ftms/dataRecord';
+import { parseIndoorBikeData } from '../protocol/ftms/indoorBikeData';
+import { parseMachineStatus, parseTrainingStatus, type MachineStatus, type TrainingStatus } from '../protocol/ftms/machineInfo';
+import { FtmsCharacteristic } from '../protocol/ftms/uuids';
 import { Emitter } from '../util/emitter';
 
 /** One complete, normalized telemetry reading from the bike. */

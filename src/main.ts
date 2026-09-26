@@ -1,6 +1,6 @@
 import './ui/style.css';
-import { App } from './app';
-import { WorkoutStore } from './storage/workoutStore';
+import { App } from './app/app';
+import { WorkoutStore } from './persistence/indexeddb/workoutStore';
 import { h, type View } from './ui/dom';
 import { historyView, workoutView } from './ui/historyView';
 import { homeView } from './ui/homeView';

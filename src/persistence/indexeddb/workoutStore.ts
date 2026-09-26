@@ -1,4 +1,4 @@
-import type { Workout, WorkoutHeader } from '../recorder/workout';
+import type { Workout, WorkoutHeader } from '../../recording/workout';
 
 const DB_NAME = 'openairbike';
 const DB_VERSION = 1;

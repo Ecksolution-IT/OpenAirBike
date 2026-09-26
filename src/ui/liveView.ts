@@ -1,4 +1,4 @@
-import type { App } from '../app';
+import type { App } from '../app/app';
 import { h, navigate, setText, type View } from './dom';
 import { formatDuration, formatKm, formatNumber } from './format';
 

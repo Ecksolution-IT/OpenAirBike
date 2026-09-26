@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { fromHex, toHex } from '../src/ftms/bytes';
-import { DataRecordAssembler } from '../src/ftms/dataRecord';
-import { parseFitnessMachineFeature, parseMachineStatus, parseTrainingStatus } from '../src/ftms/machineInfo';
-import { shortUuid, uuid16, uuidName } from '../src/ftms/uuids';
+import { fromHex, toHex } from '../src/protocol/ftms/bytes';
+import { DataRecordAssembler } from '../src/protocol/ftms/dataRecord';
+import { parseFitnessMachineFeature, parseMachineStatus, parseTrainingStatus } from '../src/protocol/ftms/machineInfo';
+import { shortUuid, uuid16, uuidName } from '../src/protocol/ftms/uuids';
 
 describe('DataRecordAssembler', () => {
   it('passes single-notification records straight through', () => {

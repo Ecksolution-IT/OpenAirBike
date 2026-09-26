@@ -8,8 +8,8 @@ import {
   shortUuid,
   uuid16,
   uuidName,
-} from '../ftms/uuids';
-import { parseFitnessMachineFeature } from '../ftms/machineInfo';
+} from '../protocol/ftms/uuids';
+import { parseFitnessMachineFeature } from '../protocol/ftms/machineInfo';
 import { BikeConnection, type BikeInfo, type ConnectionState } from './types';
 
 /** Name prefixes to offer in the chooser even if the bike does not advertise the FTMS UUID. */

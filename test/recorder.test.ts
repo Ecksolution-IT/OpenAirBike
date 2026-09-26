@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Accumulator, KCAL_PER_WATT_SECOND, WorkoutRecorder } from '../src/recorder/recorder';
-import { summarize } from '../src/recorder/workout';
+import { Accumulator, KCAL_PER_WATT_SECOND, WorkoutRecorder } from '../src/recording/recorder';
+import { summarize } from '../src/recording/workout';
 import type { TelemetrySample } from '../src/telemetry/engine';
 
 const T0 = Date.UTC(2026, 8, 26, 7, 0, 0);
