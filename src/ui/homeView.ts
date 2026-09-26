@@ -2,7 +2,7 @@ import type { App } from '../app/app';
 import type { ConnectionState } from '../app/app';
 import { download } from '../persistence/export';
 import { h, navigate, setText, type View } from './dom';
-import { formatDateTime, formatDuration, formatNumber } from './format';
+import { formatDateTime, formatNumber } from './format';
 
 const STATE_LABEL: Record<ConnectionState, string> = {
   disconnected: 'Not connected',
@@ -25,24 +25,27 @@ export function homeView(app: App): View {
       action().catch(showError);
     };
 
+    // Sessions interrupted by closing the app while recording; their samples are saved.
     const draftBanner = h('div', { class: 'card banner', hidden: true });
-    void app.pendingDraft().then((draft) => {
-      if (!draft) return;
-      draftBanner.replaceChildren(
-        h('p', {}, `An unfinished workout from ${formatDateTime(draft.startedAt)} (${formatDuration(draft.summary.durationS)}) was found.`),
-        h('div', { class: 'row' },
-          h('button', { onclick: run(async () => {
-            const workout = await app.recoverDraft();
-            if (workout) navigate(`#/workout/${workout.id}`);
-          }) }, 'Save it'),
-          h('button', { class: 'secondary', onclick: run(async () => {
-            await app.store.clearDraft();
-            draftBanner.hidden = true;
-          }) }, 'Discard'),
-        ),
-      );
-      draftBanner.hidden = false;
-    });
+    const showUnfinished = () =>
+      void app.unfinishedSessions().then(([session]) => {
+        draftBanner.hidden = !session;
+        if (!session) return;
+        draftBanner.replaceChildren(
+          h('p', {}, `An unfinished workout from ${formatDateTime(session.startedAt)} was found.`),
+          h('div', { class: 'row' },
+            h('button', { onclick: run(async () => {
+              await app.recoverSession(session.id);
+              navigate(`#/workout/${session.id}`);
+            }) }, 'Save it'),
+            h('button', { class: 'secondary', onclick: run(async () => {
+              await app.deleteSession(session.id);
+              showUnfinished();
+            }) }, 'Discard'),
+          ),
+        );
+      });
+    showUnfinished();
 
     const statusDot = h('span', { class: 'dot' });
     const statusText = h('span');

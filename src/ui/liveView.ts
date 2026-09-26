@@ -47,8 +47,8 @@ export function liveView(app: App): View {
       }
       finishButton.disabled = true;
       try {
-        const workout = await app.finishWorkout();
-        navigate(`#/workout/${workout.id}`);
+        const id = await app.finishWorkout();
+        navigate(`#/workout/${id}`);
       } catch (err) {
         error.textContent = `Saving failed: ${err instanceof Error ? err.message : String(err)}`;
         error.hidden = false;

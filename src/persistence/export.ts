@@ -1,32 +1,28 @@
-import type { Workout, WorkoutSample } from '../recording/workout';
+import type { Sample, SessionDetail } from '../domain/types';
 
-const CSV_COLUMNS: (keyof WorkoutSample)[] = [
-  't',
-  'powerW',
-  'cadenceRpm',
-  'speedKmh',
-  'heartRateBpm',
-  'distanceM',
-  'energyKcal',
-];
+/** Stable, documented export format for one session (the user's data, readable without OpenAirBike). */
+export const SESSION_EXPORT_FORMAT = 'openairbike-session';
+export const SESSION_EXPORT_VERSION = 1;
 
-export function workoutToJson(workout: Workout): string {
-  return JSON.stringify(workout, null, 2);
+const CSV_COLUMNS: (keyof Sample)[] = ['tMs', 'powerW', 'cadenceRpm', 'speedKmh', 'heartRateBpm', 'distanceM', 'energyKcal'];
+
+export function sessionToJson(detail: SessionDetail): string {
+  return JSON.stringify({ format: SESSION_EXPORT_FORMAT, version: SESSION_EXPORT_VERSION, ...detail }, null, 2);
 }
 
-/** One row per sample; empty cells where the bike did not report a metric. */
-export function workoutToCsv(workout: Workout): string {
-  const rows = workout.samples.map((s) => CSV_COLUMNS.map((c) => s[c] ?? '').join(','));
+/** One row per sample; empty cells where the device did not report a metric. */
+export function sessionToCsv(detail: SessionDetail): string {
+  const rows = detail.samples.map((s) => CSV_COLUMNS.map((c) => s[c] ?? '').join(','));
   return [CSV_COLUMNS.join(','), ...rows].join('\n') + '\n';
 }
 
-export function exportFileName(workout: Workout, extension: string): string {
-  return `openairbike-${workout.startedAt.replace(/[:.]/g, '-')}.${extension}`;
+export function exportFileName(startedAt: string, extension: string): string {
+  return `openairbike-${startedAt.replace(/[:.]/g, '-')}.${extension}`;
 }
 
 /** Triggers a browser download of `content`. */
-export function download(fileName: string, content: string, mimeType: string): void {
-  const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
+export function download(fileName: string, content: string | Uint8Array, mimeType: string): void {
+  const url = URL.createObjectURL(new Blob([content as BlobPart], { type: mimeType }));
   const a = document.createElement('a');
   a.href = url;
   a.download = fileName;

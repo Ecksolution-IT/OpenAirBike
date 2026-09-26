@@ -78,3 +78,6 @@ experimental).
 **Consequences.** The IndexedDB code and its crash-recovery draft are replaced by the SQLite
 implementation. Crash recovery is kept as a feature, implemented by writing samples to SQLite
 while recording.
+
+Done in plan step 8: `SessionRecording` writes samples and events every 5 s; `recoverSession`
+finishes interrupted sessions from the saved samples (status `recovered`).

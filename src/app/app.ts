@@ -1,10 +1,11 @@
 import { FtmsIndoorBikeAdapter, ftmsIndoorBikeFilter } from '../adapters/ftms-indoor-bike/adapter';
 import type { DeviceAdapter, DeviceInfo } from '../adapters/types';
-import type { WorkoutStore } from '../persistence/indexeddb/workoutStore';
+import type { Repositories } from '../domain/repositories';
+import type { Device, SessionDetail, Session } from '../domain/types';
 import { toHex } from '../protocol/ftms/bytes';
 import { uuidName } from '../protocol/ftms/uuids';
-import { WorkoutRecorder } from '../recording/recorder';
-import type { Workout } from '../recording/workout';
+import type { WorkoutRecorder } from '../recording/recorder';
+import { recoverSession, SessionRecording } from '../recording/sessionRecording';
 import { TelemetryStream } from '../telemetry/stream';
 import { SimulatedTransport } from '../transport/simulated/simulator';
 import type { ConnectionState, GattNotification, Transport } from '../transport/types';
@@ -15,7 +16,6 @@ import { ScreenWakeLock } from '../util/wakeLock';
 export type { ConnectionState };
 
 const LAST_BIKE_KEY = 'lastBike';
-const DRAFT_INTERVAL_MS = 15_000;
 const MAX_LOG_LINES = 200;
 const MAX_CAPTURED_PACKETS = 20_000;
 
@@ -46,21 +46,31 @@ export class App extends Emitter<AppEvents> {
 
   private adapter: DeviceAdapter | undefined;
   private detachDevice: (() => void) | undefined;
-  private _recorder: WorkoutRecorder | undefined;
-  private draftTimer: ReturnType<typeof setInterval> | undefined;
+  private recording: SessionRecording | undefined;
+  /** Resolves once the connected device is stored, so sessions can refer to it. */
+  private deviceSaved: Promise<unknown> = Promise.resolve();
   private readonly wakeLock = new ScreenWakeLock();
   private _rememberedBike: RememberedBike | undefined;
 
-  constructor(readonly store: WorkoutStore) {
+  constructor(
+    private readonly repositories: Repositories,
+    private readonly database?: { exportDatabase(): Promise<Uint8Array> },
+  ) {
     super();
     this.telemetry.on('sample', (s) => {
-      this._recorder?.addSample(s);
+      this.recording?.addSample(s);
       this.emit('change', undefined);
     });
+    // Write buffered samples as soon as the page is hidden (tab switch, app close on mobile).
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') void this.recording?.flush().catch(() => undefined);
+      });
+    }
   }
 
   async init(): Promise<void> {
-    this._rememberedBike = await this.store.getMeta<RememberedBike>(LAST_BIKE_KEY);
+    this._rememberedBike = await this.repositories.settings.get<RememberedBike>(LAST_BIKE_KEY);
   }
 
   // ── Connection ─────────────────────────────────────────────────────────────
@@ -117,20 +127,26 @@ export class App extends Emitter<AppEvents> {
     await this.disconnect();
     const adapter = new FtmsIndoorBikeAdapter(transport, { simulated });
     this.adapter = adapter;
+    let wasReconnecting = false;
     const offs = [
       transport.on('notification', (n) => this.capturePacket(n)),
       adapter.on('sample', (s) => this.telemetry.push(s)),
       adapter.on('state', (state) => {
+        if (state === 'reconnecting') this.recording?.note('link-lost');
+        if (state === 'connected' && wasReconnecting) this.recording?.note('link-restored');
+        wasReconnecting = state === 'reconnecting';
         this.addLog(`Connection: ${state}`);
         this.emit('change', undefined);
       }),
       adapter.on('log', (line) => this.addLog(line)),
       adapter.on('info', (info) => {
+        this.deviceSaved = this.saveDevice(info);
         if (!info.simulated) void this.rememberBike({ id: info.id, name: info.name });
         this.emit('change', undefined);
       }),
       adapter.on('deviceEvent', (e) => {
         this.addLog(`Device: ${e.label}`);
+        this.recording?.note('device', e.label);
         // Follow the console's pause button, so pedalling to restart does not need the screen.
         if (e.kind === 'paused' || e.kind === 'stopped') this.pauseWorkout();
         if (e.kind === 'started') this.resumeWorkout();
@@ -150,83 +166,95 @@ export class App extends Emitter<AppEvents> {
 
   private async rememberBike(bike: RememberedBike) {
     this._rememberedBike = bike;
-    await this.store.setMeta(LAST_BIKE_KEY, bike).catch(() => undefined);
+    await this.repositories.settings.set(LAST_BIKE_KEY, bike).catch(() => undefined);
+  }
+
+  private async saveDevice(info: DeviceInfo): Promise<void> {
+    const now = new Date().toISOString();
+    const device: Device = {
+      id: info.id,
+      name: info.name,
+      profileId: info.profileId,
+      manufacturer: info.manufacturer,
+      model: info.model,
+      firmware: info.firmware,
+      simulated: info.simulated ?? false,
+      firstSeenAt: now,
+      lastSeenAt: now,
+    };
+    await this.repositories.devices.upsert(device).catch((err) => this.addLog(`Device not saved: ${String(err)}`));
   }
 
   // ── Workout ────────────────────────────────────────────────────────────────
 
+  /** The live recorder of the running session, for the training screen. */
   get recorder(): WorkoutRecorder | undefined {
-    return this._recorder;
+    return this.recording?.recorder;
   }
 
   startWorkout(): void {
-    if (this._recorder && this._recorder.state !== 'finished') return;
-    const info = this.bikeInfo;
-    this._recorder = new WorkoutRecorder(
-      info && {
-        name: info.name,
-        manufacturer: info.manufacturer,
-        model: info.model,
-        firmware: info.firmware,
-        simulated: info.simulated,
-      },
-    );
-    this._recorder.start();
-    this.draftTimer = setInterval(() => void this.saveDraft(), DRAFT_INTERVAL_MS);
+    if (this.recording) return;
+    this.recording = new SessionRecording(this.repositories.sessions, {
+      deviceId: this.bikeInfo?.id,
+      after: this.deviceSaved,
+      onError: (err) => this.addLog(`Saving failed, will retry: ${String(err)}`),
+    });
     void this.wakeLock.enable();
     this.addLog('Workout started.');
   }
 
   pauseWorkout(): void {
-    if (this._recorder?.state !== 'recording') return;
-    this._recorder.pause();
+    if (this.recording?.state !== 'recording') return;
+    this.recording.pause();
     this.addLog('Workout paused.');
   }
 
   resumeWorkout(): void {
-    if (this._recorder?.state !== 'paused') return;
-    this._recorder.resume();
+    if (this.recording?.state !== 'paused') return;
+    this.recording.resume();
     this.addLog('Workout resumed.');
   }
 
-  /** Stops the workout and saves it locally. */
-  async finishWorkout(): Promise<Workout> {
-    const recorder = this._recorder;
-    if (!recorder) throw new Error('No workout in progress.');
-    clearInterval(this.draftTimer);
-    const workout = recorder.stop();
-    this._recorder = undefined;
+  /** Stops the workout and saves it. Returns the session id. */
+  async finishWorkout(): Promise<string> {
+    const recording = this.recording;
+    if (!recording) throw new Error('No workout in progress.');
+    this.recording = undefined;
     void this.wakeLock.disable();
-    try {
-      await this.store.save(workout);
-    } catch (err) {
-      // Keep the finished workout as a draft so it can still be recovered on the next start.
-      await this.store.saveDraft(workout).catch(() => undefined);
-      throw err;
-    }
-    await this.store.clearDraft();
+    // If this fails, the session stays "recording" with its saved samples and can be recovered.
+    await recording.stop();
     this.addLog('Workout saved.');
-    return workout;
+    return recording.id;
   }
 
-  private async saveDraft() {
-    if (!this._recorder || this._recorder.state === 'finished') return;
-    await this.store.saveDraft(this._recorder.toWorkout()).catch((err) => this.addLog(`Draft not saved: ${err}`));
+  // ── Sessions ───────────────────────────────────────────────────────────────
+
+  listSessions(): Promise<Session[]> {
+    return this.repositories.sessions.list();
   }
 
-  /** A workout that was still running when the app was closed, if any. */
-  async pendingDraft(): Promise<Workout | undefined> {
-    // While recording, the draft is the current workout's own autosave.
-    return this._recorder ? undefined : this.store.loadDraft();
+  getSession(id: string): Promise<SessionDetail | undefined> {
+    return this.repositories.sessions.get(id);
   }
 
-  async recoverDraft(): Promise<Workout | undefined> {
-    const draft = await this.store.loadDraft();
-    if (!draft) return undefined;
-    const workout = { ...draft, recovered: true };
-    await this.store.save(workout);
-    await this.store.clearDraft();
-    return workout;
+  deleteSession(id: string): Promise<void> {
+    return this.repositories.sessions.delete(id);
+  }
+
+  /** Sessions interrupted while recording (app closed), excluding the one running now. */
+  async unfinishedSessions(): Promise<Session[]> {
+    return (await this.repositories.sessions.listUnfinished()).filter((s) => s.id !== this.recording?.id);
+  }
+
+  /** Finishes an interrupted session from its saved samples. */
+  recoverSession(id: string): Promise<boolean> {
+    return recoverSession(this.repositories.sessions, id);
+  }
+
+  /** The whole database as a standard SQLite file, if the storage supports it. */
+  exportDatabase(): Promise<Uint8Array> {
+    if (!this.database) return Promise.reject(new Error('Database export is not available.'));
+    return this.database.exportDatabase();
   }
 
   // ── Diagnostics ────────────────────────────────────────────────────────────

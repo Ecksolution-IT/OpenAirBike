@@ -1,5 +1,6 @@
+import type { Sample, SessionSummary } from '../domain/types';
 import type { TelemetrySample } from '../telemetry/types';
-import { summarize, type Workout, type WorkoutDevice, type WorkoutSample } from './workout';
+import { summarize } from './summary';
 
 export type RecorderState = 'idle' | 'recording' | 'paused' | 'finished';
 
@@ -46,25 +47,25 @@ export class Accumulator {
 const round = (v: number | undefined, digits: number) =>
   v === undefined ? undefined : Math.round(v * 10 ** digits) / 10 ** digits;
 
-export function newWorkoutId(now: number): string {
-  const rand = Math.random().toString(36).slice(2, 8);
-  return `${new Date(now).toISOString().replace(/[-:]/g, '').replace(/\..*/, '')}-${rand}`;
+/** Result of a stopped recording. */
+export interface RecordingResult {
+  /** Active (non-paused) seconds, rounded. */
+  activeS: number;
+  summary: SessionSummary;
 }
 
-/** Recorder: turns telemetry samples into a workout with start / pause / resume / stop. */
+/**
+ * Recorder: turns canonical telemetry into domain samples with start / pause / resume / stop.
+ * Pure in-memory state; persisting samples is the job of `SessionRecording`.
+ */
 export class WorkoutRecorder {
   private _state: RecorderState = 'idle';
-  private id = '';
-  private startedAt = 0;
-  private endedAt = 0;
   /** Active milliseconds of all finished recording segments. */
   private activeMsBefore = 0;
   private segmentStart = 0;
-  private readonly samples: WorkoutSample[] = [];
+  private readonly samples: Sample[] = [];
   private readonly distance = new Accumulator();
   private readonly energy = new Accumulator();
-
-  constructor(private readonly device?: WorkoutDevice) {}
 
   get state(): RecorderState {
     return this._state;
@@ -75,9 +76,7 @@ export class WorkoutRecorder {
   }
 
   start(now = Date.now()): void {
-    if (this._state !== 'idle') throw new Error(`Cannot start a workout that is ${this._state}.`);
-    this.id = newWorkoutId(now);
-    this.startedAt = now;
+    if (this._state !== 'idle') throw new Error(`Cannot start a recording that is ${this._state}.`);
     this.segmentStart = now;
     this._state = 'recording';
   }
@@ -96,18 +95,22 @@ export class WorkoutRecorder {
     this._state = 'recording';
   }
 
-  stop(now = Date.now()): Workout {
-    if (this._state === 'idle' || this._state === 'finished') throw new Error('No workout in progress.');
+  stop(now = Date.now()): RecordingResult {
+    if (this._state === 'idle' || this._state === 'finished') throw new Error('No recording in progress.');
     this.pause(now);
-    this.endedAt = now;
     this._state = 'finished';
-    return this.toWorkout(now);
+    return { activeS: Math.round(this.elapsedS(now)), summary: summarize(this.samples) };
   }
 
   /** Active (non-paused) seconds at `now`. */
   elapsedS(now = Date.now()): number {
     const running = this._state === 'recording' ? Math.max(0, now - this.segmentStart) : 0;
     return (this.activeMsBefore + running) / 1000;
+  }
+
+  /** Active milliseconds at `now`, as used for sample and event timestamps. */
+  elapsedMs(now = Date.now()): number {
+    return Math.round(this.elapsedS(now) * 1000);
   }
 
   get distanceM(): number {
@@ -118,37 +121,23 @@ export class WorkoutRecorder {
     return this.energy.total;
   }
 
-  addSample(s: TelemetrySample): void {
-    if (this._state !== 'recording' || s.at < this.segmentStart) return;
+  /** Records a sample while recording; returns it, or undefined if it was not recorded. */
+  addSample(s: TelemetrySample): Sample | undefined {
+    if (this._state !== 'recording' || s.at < this.segmentStart) return undefined;
 
     this.distance.add(s.at, s.deviceCounters.distanceM, s.speedKmh === undefined ? undefined : s.speedKmh / 3.6);
     this.energy.add(s.at, s.deviceCounters.energyKcal, s.powerW === undefined ? undefined : Math.max(0, s.powerW) * KCAL_PER_WATT_SECOND);
 
-    this.samples.push({
-      t: round(this.elapsedS(s.at), 1)!,
+    const sample: Sample = {
+      tMs: this.elapsedMs(s.at),
       powerW: round(s.powerW, 0),
       cadenceRpm: round(s.cadenceRpm, 1),
       speedKmh: round(s.speedKmh, 2),
       heartRateBpm: s.heartRateBpm,
       distanceM: round(this.distance.total, 1)!,
       energyKcal: round(this.energy.total, 1)!,
-    });
-  }
-
-  /**
-   * The workout as of `now`. Used on stop, and periodically while recording so that an
-   * unexpectedly closed app can recover the workout.
-   */
-  toWorkout(now = Date.now()): Workout {
-    const durationS = Math.round(this.elapsedS(now));
-    return {
-      schemaVersion: 1,
-      id: this.id,
-      startedAt: new Date(this.startedAt).toISOString(),
-      endedAt: new Date(this._state === 'finished' ? this.endedAt : now).toISOString(),
-      device: this.device,
-      summary: summarize(this.samples, durationS),
-      samples: [...this.samples],
     };
+    this.samples.push(sample);
+    return sample;
   }
 }

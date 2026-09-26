@@ -332,7 +332,8 @@ Cloud infrastructure is not required for the first version.
 
 v0.1 is a browser app written in TypeScript. It talks to the bike through
 [Web Bluetooth](https://developer.mozilla.org/docs/Web/API/Web_Bluetooth_API), so there is nothing to
-install and no server: the app is a set of static files, and workouts stay in the browser's IndexedDB.
+install and no server: the app is a set of static files, and workouts stay in a SQLite database inside
+the browser (Origin Private File System).
 
 | Layer               | Code                                | Responsibility                                                              |
 | ------------------- | ----------------------------------- | --------------------------------------------------------------------------- |
@@ -342,7 +343,7 @@ install and no server: the app is a set of static files, and workouts stay in th
 | Canonical Telemetry | `src/telemetry/`                    | Device-independent samples (km/h, m, W, kcal, 1/min) and live stream.       |
 | Recording           | `src/recording/`                    | Start / pause / resume / stop, distance and calorie accounting, summary.    |
 | Domain              | `src/domain/`                       | Device, Session, Sample, Summary; repository contracts. No I/O.             |
-| Persistence         | `src/persistence/`                  | SQLite in a worker (OPFS) behind the repository contracts; in-memory reference. The app still uses the v0.1 IndexedDB store until plan step 8. |
+| Persistence         | `src/persistence/`                  | SQLite in a worker (OPFS) behind the repository contracts; in-memory reference; JSON / CSV / `.sqlite` export. |
 | Application         | `src/app/`                          | Wires the layers, offers use cases to the UI.                               |
 | UI                  | `src/ui/`                           | Connect screen, live training screen, summary, history, diagnostics.        |
 
@@ -499,13 +500,16 @@ npm run build      # static files in dist/, host them on any HTTPS static host
 
 ### Your data
 
-Workouts are stored only in your browser (IndexedDB). Each workout can be exported as JSON or CSV,
-and the history page exports everything as one JSON file. The JSON format is documented in
-[`src/recording/workout.ts`](src/recording/workout.ts): a summary plus one sample per bike notification
-(active time, power, cadence, speed, heart rate, cumulative distance and calories).
+Workouts are stored only in your browser, in a SQLite database. Each workout can be exported as JSON
+or CSV, and the history page exports the whole database as a standard `.sqlite` file that any SQLite
+tool can open. The schema is in
+[`src/persistence/sqlite/migrations/`](src/persistence/sqlite/migrations/) and the domain types in
+[`src/domain/types.ts`](src/domain/types.ts): sessions with a summary, one sample per bike reading
+(active time, power, cadence, speed, heart rate, cumulative distance and calories) and events
+(pause, resume, connection loss, console buttons).
 
-A workout in progress is saved as a draft every 15 seconds. If the browser closes during a ride, the
-app offers to save the unfinished workout on the next start.
+While riding, samples are written every 5 seconds. If the browser closes during a ride, the app offers
+to save the unfinished workout on the next start. The database can be open in only one tab at a time.
 
 ---
 
