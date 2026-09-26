@@ -1,15 +1,7 @@
 import type { App } from '../app/app';
-import type { ConnectionState } from '../app/app';
 import { download } from '../persistence/export';
 import { h, navigate, setText, type View } from './dom';
-import { formatDateTime, formatNumber } from './format';
-
-const STATE_LABEL: Record<ConnectionState, string> = {
-  disconnected: 'Not connected',
-  connecting: 'Connecting…',
-  connected: 'Connected',
-  reconnecting: 'Reconnecting…',
-};
+import { fmt, i18n, t } from './i18n';
 
 export function homeView(app: App): View {
   return (root) => {
@@ -32,16 +24,16 @@ export function homeView(app: App): View {
         draftBanner.hidden = !session;
         if (!session) return;
         draftBanner.replaceChildren(
-          h('p', {}, `An unfinished workout from ${formatDateTime(session.startedAt)} was found.`),
+          h('p', {}, t.unfinishedFound(fmt.dateTime(session.startedAt))),
           h('div', { class: 'row' },
             h('button', { onclick: run(async () => {
               await app.recoverSession(session.id);
               navigate(`#/workout/${session.id}`);
-            }) }, 'Save it'),
+            }) }, t.save),
             h('button', { class: 'secondary', onclick: run(async () => {
               await app.deleteSession(session.id);
               showUnfinished();
-            }) }, 'Discard'),
+            }) }, t.discard),
           ),
         );
       });
@@ -56,32 +48,32 @@ export function homeView(app: App): View {
     const startButton = h('button', { class: 'primary huge', onclick: () => {
       app.startWorkout();
       navigate('#/live');
-    } }, 'Start workout');
-    const resumeButton = h('button', { class: 'primary huge', onclick: () => navigate('#/live') }, 'Back to workout');
+    } }, t.startWorkout);
+    const resumeButton = h('button', { class: 'primary huge', onclick: () => navigate('#/live') }, t.backToWorkout);
 
     const diagInfo = h('pre');
     const diagConformance = h('table', { class: 'conformance' });
     const diagLog = h('pre', { class: 'log' });
     const diagPackets = h('pre', { class: 'log' });
     const diagnostics = h('details', { class: 'card' },
-      h('summary', {}, 'Diagnostics'),
-      h('p', { class: 'muted' }, 'What the bike reports over FTMS. A packet capture helps to support new bikes and firmware.'),
+      h('summary', {}, t.diagnostics),
+      h('p', { class: 'muted' }, t.diagnosticsIntro),
       diagInfo,
-      h('h3', {}, 'FTMS conformance'),
-      h('p', { class: 'muted' }, 'Observed behaviour checked against the Bluetooth SIG FTMS test suite and ICS. Passive checks only, not a qualification result.'),
+      h('h3', {}, t.conformance),
+      h('p', { class: 'muted' }, t.conformanceIntro),
       diagConformance,
-      h('h3', {}, 'Log'), diagLog,
-      h('h3', {}, 'Latest packets'), diagPackets,
+      h('h3', {}, t.log), diagLog,
+      h('h3', {}, t.latestPackets), diagPackets,
       h('button', { class: 'secondary', onclick: () =>
-        download(`openairbike-capture-${Date.now()}.json`, app.captureReport(), 'application/json') }, 'Download packet capture'),
+        download(`openairbike-capture-${Date.now()}.json`, app.captureReport(), 'application/json') }, t.downloadCapture),
     );
 
     const view = h('div', { class: 'stack' },
-      h('header', { class: 'title' }, h('h1', {}, 'OPENAIRBIKE')),
+      h('header', { class: 'title' }, h('h1', {}, t.appTitle)),
       !app.bluetoothAvailable &&
         h('div', { class: 'card warning' },
-          h('p', {}, 'This browser does not support Web Bluetooth. Use Chrome or Edge on desktop or Android, served over HTTPS or localhost.'),
-          h('p', {}, 'You can still try OpenAirBike with the demo bike.'),
+          h('p', {}, t.noBluetooth),
+          h('p', {}, t.tryDemo),
         ),
       draftBanner,
       h('section', { class: 'card' },
@@ -93,7 +85,7 @@ export function homeView(app: App): View {
       ),
       startButton,
       resumeButton,
-      h('nav', { class: 'row' }, h('a', { class: 'button secondary', href: '#/history' }, 'Workout history')),
+      h('nav', { class: 'row' }, h('a', { class: 'button secondary', href: '#/history' }, t.history)),
       diagnostics,
     );
     root.append(view);
@@ -125,16 +117,16 @@ export function homeView(app: App): View {
       const buttons: HTMLElement[] = [];
       if (state === 'disconnected') {
         if (app.bluetoothAvailable) {
-          buttons.push(h('button', { onclick: run(() => app.connectBluetooth()) }, 'Connect bike'));
+          buttons.push(h('button', { onclick: run(() => app.connectBluetooth()) }, t.connectBike));
           if (remembered) {
             buttons.push(h('button', { class: 'secondary', onclick: run(async () => {
-              if (!(await app.reconnectRemembered())) throw new Error(`Could not find ${remembered.name}. Use “Connect bike”.`);
-            }) }, `Reconnect ${remembered.name}`));
+              if (!(await app.reconnectRemembered())) throw new Error(t.bikeNotFound(remembered.name));
+            }) }, t.reconnectBike(remembered.name)));
           }
         }
-        buttons.push(h('button', { class: 'secondary', onclick: run(() => app.connectSimulator()) }, 'Use demo bike'));
+        buttons.push(h('button', { class: 'secondary', onclick: run(() => app.connectSimulator()) }, t.useDemoBike));
       } else {
-        buttons.push(h('button', { class: 'secondary', onclick: run(() => app.disconnect()) }, 'Disconnect'));
+        buttons.push(h('button', { class: 'secondary', onclick: run(() => app.disconnect()) }, t.disconnect));
       }
       actions.replaceChildren(...buttons);
     };
@@ -143,26 +135,26 @@ export function homeView(app: App): View {
       const state = app.connectionState;
       const recording = app.recorder !== undefined;
       statusDot.className = `dot ${state}`;
-      setText(statusText, STATE_LABEL[state]);
+      setText(statusText, t.state[state]);
       const info = app.bikeInfo;
       setText(bikeName, info ? [info.name, info.manufacturer, info.model].filter(Boolean).join(' · ') : '');
       renderActions();
 
       const s = app.telemetry.current();
       preview.hidden = !s;
-      if (s) setText(preview, `${formatNumber(s.powerW)} W · ${formatNumber(s.cadenceRpm)} RPM · ${formatNumber(s.speedKmh, 1)} km/h`);
+      if (s) setText(preview, `${fmt.number(s.powerW)} W · ${fmt.number(s.cadenceRpm)} ${t.cadenceUnit} · ${fmt.number(s.speedKmh, 1)} km/h`);
 
       startButton.hidden = recording;
       startButton.disabled = state !== 'connected';
       resumeButton.hidden = !recording;
 
       if (diagnostics.open) {
-        setText(diagInfo, JSON.stringify(info ?? { status: 'no bike connected' }, null, 2));
+        setText(diagInfo, JSON.stringify(info ?? { status: t.noBike }, null, 2));
         renderConformance();
         setText(diagLog, app.log.slice(-40).join('\n'));
         setText(
           diagPackets,
-          app.capture.slice(-12).map((p) => `${new Date(p.receivedAt).toLocaleTimeString()}  ${p.characteristic}  ${p.hex}`).join('\n'),
+          app.capture.slice(-12).map((p) => `${new Date(p.receivedAt).toLocaleTimeString(i18n.locale)}  ${p.characteristic}  ${p.hex}`).join('\n'),
         );
       }
     };

@@ -5,7 +5,6 @@ import { createMemoryRepositories } from '../src/persistence/memory/memoryReposi
 import { exportFileName, sessionToCsv, sessionToJson } from '../src/persistence/export';
 import { recoverSession, SessionRecording } from '../src/recording/sessionRecording';
 import type { TelemetrySample } from '../src/telemetry/types';
-import { formatDuration, formatKm, formatNumber } from '../src/ui/format';
 
 const T0 = Date.UTC(2026, 8, 26, 7, 0, 0);
 
@@ -131,18 +130,5 @@ describe('session export', () => {
   it('writes self-describing JSON', () => {
     expect(JSON.parse(sessionToJson(detail))).toEqual({ format: 'openairbike-session', version: 1, ...detail });
     expect(exportFileName(detail.session.startedAt, 'csv')).toBe('openairbike-2026-09-26T07-13-00-000Z.csv');
-  });
-});
-
-describe('format', () => {
-  it('formats durations, numbers and distances', () => {
-    expect(formatDuration(0)).toBe('00:00');
-    expect(formatDuration(1458)).toBe('24:18');
-    expect(formatDuration(3725)).toBe('1:02:05');
-    expect(formatDuration(undefined)).toBe('--');
-    expect(formatNumber(427.6)).toBe('428');
-    expect(formatNumber(undefined)).toBe('--');
-    expect(formatKm(8400)).toBe('8.40');
-    expect(formatKm(123_456)).toBe('123.5');
   });
 });

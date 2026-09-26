@@ -55,6 +55,11 @@ values need no conversion between recording and display:
 defaulting to `de-DE` (decimal comma). Storage stays locale-independent. Imperial units are not
 supported.
 
+Implemented in plan step 9: `src/ui/format.ts` (Intl, no thousands separators so training
+numbers stay short, distances below 1 km in metres) and `src/ui/i18n.ts` (German texts by
+default, English when the browser prefers English; the same keys in both, enforced by a test).
+Diagnostic details (log, conformance) stay in English.
+
 ## D3 — Reference projects: adopt what is allowed, depend on nothing (2026-09-26)
 
 **Decision.** OpenAirBike does not take runtime dependencies on reference projects. Content may

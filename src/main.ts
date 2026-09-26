@@ -2,6 +2,7 @@ import './ui/style.css';
 import { App } from './app/app';
 import { DatabaseLockedError, openSqliteStore, type SqliteStore } from './persistence/sqlite/client';
 import { h, type View } from './ui/dom';
+import { i18n, t } from './ui/i18n';
 import { historyView, workoutView } from './ui/historyView';
 import { homeView } from './ui/homeView';
 import { liveView } from './ui/liveView';
@@ -17,13 +18,13 @@ function route(app: App): View {
 
 async function main() {
   const root = document.getElementById('app')!;
+  document.documentElement.lang = i18n.language;
   let store: SqliteStore;
   try {
     store = await openSqliteStore();
   } catch (err) {
-    const message =
-      err instanceof DatabaseLockedError ? err.message : `Local storage is unavailable: ${err instanceof Error ? err.message : String(err)}`;
-    root.append(h('header', { class: 'title' }, h('h1', {}, 'OPENAIRBIKE')), h('p', { class: 'card error' }, message));
+    const message = err instanceof DatabaseLockedError ? t.databaseLocked : t.storageUnavailable(err instanceof Error ? err.message : String(err));
+    root.append(h('header', { class: 'title' }, h('h1', {}, t.appTitle)), h('p', { class: 'card error' }, message));
     return;
   }
 

@@ -44,7 +44,7 @@ Each step is one reviewable commit series with green typecheck, tests and build.
 | 6 | **Domain + repository interfaces** — ✅ done | `Device`, `Session`, `Sample`, `Summary`, `SessionRepository`, `DeviceRepository`. In-memory implementation for tests. |
 | 7 | **SQLite persistence** — ✅ done | Single-tab ownership via Web Lock (spike finding). Portable schema ([sketch](research/architecture-gap.md#sqlite-schema-sketch-not-implemented)), migrations as `.sql` files, repositories in the worker. Samples written in batches while recording (replaces the IndexedDB draft, D4). Repository contract tests run against in-memory and SQLite. |
 | 8 | **Recording on the new stack** — ✅ done | Recorder consumes Canonical Telemetry and writes through the repository; pause/resume/stop and link-loss behaviour as today. |
-| 9 | **Minimal live display** | Power, cadence, heart rate or speed, time, distance, energy; de-DE formatting; connection state. Session list with summary. Diagnostics and packet capture kept. |
+| 9 | **Minimal live display** — ✅ done | Power, cadence, heart rate or speed, time, distance, energy; de-DE formatting; connection state. Session list with summary. Diagnostics and packet capture kept. |
 | 10 | **Remove v0.1 leftovers** | IndexedDB store and draft (✅ removed in step 8, together with the `fake-indexeddb` dev dependency); remaining: review of leftovers, README and docs. |
 
 Steps 1 and 5 can run in parallel with 2–4. Step 1 is deliberately first: if in-browser SQLite
