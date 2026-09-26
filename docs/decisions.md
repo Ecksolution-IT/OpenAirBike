@@ -28,6 +28,12 @@ the Origin Private File System). The design must allow switching to a real datab
   Only one tab can own the database at a time; the app must enforce and explain that.
 * A browser page cannot talk to a SQL server directly; the server option therefore implies a
   small backend later. Not needed now.
+* Implemented in plan steps 6–7: contracts in `src/domain/repositories.ts`, SQLite in
+  `src/persistence/sqlite/` (worker + client), in-memory reference in `src/persistence/memory/`.
+  Both implementations pass the same contract tests (`test/repositoryContract.ts`); a test guards
+  the migrations against SQLite-only syntax. Summary values live as columns of `session` rather
+  than in a separate table (one row per session, simpler queries). Measured in Chromium: one
+  batch append ≈ 16 ms (one OPFS transaction), reading a 30-minute session ≈ 25 ms.
 
 ## D2 — Units and formats: metric, as used in Germany/Europe (2026-09-26)
 
