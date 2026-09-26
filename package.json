@@ -1,0 +1,23 @@
+{
+  "name": "openairbike",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source training and telemetry software for the Rogue Echo Bike V3 (Bluetooth FTMS).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/web-bluetooth": "^0.0.21",
+    "fake-indexeddb": "^6.2.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}
