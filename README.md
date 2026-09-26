@@ -341,7 +341,8 @@ install and no server: the app is a set of static files, and workouts stay in th
 | Device Adapter      | `src/adapters/`                     | FTMS indoor bike → Canonical Telemetry; device profiles (Rogue Echo Bike V3, generic FTMS). |
 | Canonical Telemetry | `src/telemetry/`                    | Device-independent samples (km/h, m, W, kcal, 1/min) and live stream.       |
 | Recording           | `src/recording/`                    | Start / pause / resume / stop, distance and calorie accounting, summary.    |
-| Persistence         | `src/persistence/`                  | IndexedDB workouts and JSON / CSV export (SQLite replaces it, see the plan). |
+| Domain              | `src/domain/`                       | Device, Session, Sample, Summary; repository contracts. No I/O.             |
+| Persistence         | `src/persistence/`                  | SQLite in a worker (OPFS) behind the repository contracts; in-memory reference. The app still uses the v0.1 IndexedDB store until plan step 8. |
 | Application         | `src/app/`                          | Wires the layers, offers use cases to the UI.                               |
 | UI                  | `src/ui/`                           | Connect screen, live training screen, summary, history, diagnostics.        |
 
