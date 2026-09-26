@@ -8,6 +8,8 @@ examining a reference project or specification again.
 | [reference-projects.md](reference-projects.md) | The five reference projects: purpose, stack, license, what is relevant |
 | [echo-bike-v3.md](echo-bike-v3.md) | What is known about the Rogue Echo Bike V3, separated into verified / reported / assumed |
 | [architecture-gap.md](architecture-gap.md) | Target layering vs. the current v0.1 code, and the open decision about SQLite |
+| [../decisions.md](../decisions.md) | Architecture decisions D1–D4 |
+| [../plan-first-technical-goal.md](../plan-first-technical-goal.md) | Step plan for the first technical goal (not commissioned) |
 | [../ftms-notes.md](../ftms-notes.md) | FTMS / FTMP / FTMS.TS / FTMS.ICS requirements and where the code implements them |
 
 ## Working rules

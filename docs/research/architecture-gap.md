@@ -90,9 +90,9 @@ event    (session_id, t_ms, kind, detail)     -- pause/resume, link loss, machin
 raw_packet (session_id, received_at, characteristic, bytes)   -- optional, diagnostics only
 ```
 
-## Decisions needed from the project owner
+## Decisions
 
-1. SQLite runtime: option A, B or C?
-2. Canonical units: SI (A2) or keep km/h internally?
-3. `@deancochran/ftms` (MIT): use as dependency, use only its test vectors, or neither?
-4. Should the v0.1 IndexedDB data be migrated, or is a clean start acceptable (experimental status)?
+Decided on 2026-09-26, see [../decisions.md](../decisions.md): D1 SQLite in the browser behind
+portable repository interfaces (option A), D2 metric units as used in Germany, D3 adopt what the
+license allows but no dependency on reference projects, D4 clean start without migration.
+Resulting plan: [../plan-first-technical-goal.md](../plan-first-technical-goal.md).
