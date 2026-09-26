@@ -6,6 +6,7 @@ examining a reference project or specification again.
 | File | Content |
 | --- | --- |
 | [reference-inventory.md](reference-inventory.md) | High-level map per reference project: purpose, stack, license, structure, key files, what to investigate later |
+| [ftms-ble-analysis.md](ftms-ble-analysis.md) | BLE/FTMS implementations compared: cleanest approach, Rogue specifics, core vs. Echo adapter, reusable MIT parts, open questions R8–R13 |
 | [reference-projects.md](reference-projects.md) | The five reference projects: purpose, stack, license, what is relevant |
 | [echo-bike-v3.md](echo-bike-v3.md) | What is known about the Rogue Echo Bike V3, separated into verified / reported / assumed |
 | [architecture-gap.md](architecture-gap.md) | Target layering vs. the v0.1 code (historical), the SQLite decision and schema sketch |
