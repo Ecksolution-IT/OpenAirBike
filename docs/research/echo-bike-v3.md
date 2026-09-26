@@ -33,7 +33,7 @@ marked verified must be confirmed with one (Diagnostics → Download packet capt
 
 | # | Question | Why it matters | How to answer |
 | --- | --- | --- | --- |
-| R1 | Is Resistance Level encoded as `sint16` (legacy XML) or `uint8` (current GSS)? | A wrong size shifts every following field. Only matters if the Echo sets flag bit 5. | Capture; if bit 5 is never set, irrelevant for the Echo but still relevant for other bikes. |
+| R1 | Is Resistance Level encoded as `sint16` (legacy XML) or `uint8` (current GSS)? | A wrong size shifts every following field. Only matters if the Echo sets flag bit 5. OpenAirBike reads `sint16`; the `@deancochran/ftms` vector with a 1-byte field then parses as truncated (e.g. power −4096 W), so a `uint8` bike shows up as **fail** in Diagnostics → “Payload length matches flags” (verified, `test/vectors.test.ts`). | Capture; if bit 5 is never set, irrelevant for the Echo but still relevant for other bikes. |
 | R2 | Exact advertised name and whether the FTMS UUID is in the advertisement | Device filter in the chooser/scan | Capture / scan log |
 | R3 | Which Fitness Machine Feature bits are set | Which metrics to show; conformance panel | Capture |
 | R4 | Does the console reset its counters when it goes idle or when the rider stops? | Counter-delta logic, session continuity | Ride, pause > 1 min, ride again, capture |

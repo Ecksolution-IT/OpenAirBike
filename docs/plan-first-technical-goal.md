@@ -37,10 +37,10 @@ Each step is one reviewable commit series with green typecheck, tests and build.
 | # | Step | Result / acceptance |
 | --- | --- | --- |
 | 1 | **Spike: SQLite WASM in OPFS** — ✅ done, see [research/spike-sqlite-opfs.md](research/spike-sqlite-opfs.md) | Minimal worker opens a database, runs a migration, writes and reads rows in Chrome via `npm run dev` without extra headers or installs. Confirms or refutes the D1 assumption about `opfs-sahpool`. Throw-away if it fails. |
-| 2 | **Move modules, no behaviour change** | Directories as above; `src/ftms` → `protocol/ftms`, `device/` → `transport/`. All existing tests pass unchanged. |
-| 3 | **Split transport from FTMS** | `transport/` only knows GATT; the FTMS discovery/subscription sequence moves to `adapters/ftms-indoor-bike`. Echo name prefixes move into `profiles/echo-bike-v3.ts`. |
-| 4 | **Canonical Telemetry** | Types per D2 (km/h, m, W, kcal, 1/min, s); device session counters carried explicitly as `deviceCounters`. Adapter tests from byte fixtures. |
-| 5 | **Parser cross-check** | Copy `@deancochran/ftms` bike/feature/status vectors with MIT notice (D3); our parser must agree, except documented differences (Resistance Level size, see research R1). |
+| 2 | **Move modules, no behaviour change** — ✅ done | Directories as above; `src/ftms` → `protocol/ftms`, `device/` → `transport/`. All existing tests pass unchanged. |
+| 3 | **Split transport from FTMS** — ✅ done | `transport/` only knows GATT; the FTMS discovery/subscription sequence moves to `adapters/ftms-indoor-bike`. Echo name prefixes move into `profiles/echo-bike-v3.ts`. |
+| 4 | **Canonical Telemetry** — ✅ done | Types per D2 (km/h, m, W, kcal, 1/min, s); device session counters carried explicitly as `deviceCounters`. Adapter tests from byte fixtures. |
+| 5 | **Parser cross-check** — ✅ done | Copy `@deancochran/ftms` bike/feature/status vectors with MIT notice (D3); our parser must agree, except documented differences (Resistance Level size, see research R1). |
 | 6 | **Domain + repository interfaces** | `Device`, `Session`, `Sample`, `Summary`, `SessionRepository`, `DeviceRepository`. In-memory implementation for tests. |
 | 7 | **SQLite persistence** | Single-tab ownership via Web Lock (spike finding). Portable schema ([sketch](research/architecture-gap.md#sqlite-schema-sketch-not-implemented)), migrations as `.sql` files, repositories in the worker. Samples written in batches while recording (replaces the IndexedDB draft, D4). Repository contract tests run against in-memory and SQLite. |
 | 8 | **Recording on the new stack** | Recorder consumes Canonical Telemetry and writes through the repository; pause/resume/stop and link-loss behaviour as today. |

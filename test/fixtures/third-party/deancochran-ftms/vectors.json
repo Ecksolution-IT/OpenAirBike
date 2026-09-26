@@ -1,0 +1,944 @@
+{
+  "$schema": "./schema.json",
+  "schemaVersion": 1,
+  "provenance": [
+    {
+      "id": "ftms-1.0",
+      "title": "Bluetooth Fitness Machine Service 1.0",
+      "url": "https://www.bluetooth.com/specifications/specs/fitness-machine-service-1-0/",
+      "revision": "1.0"
+    },
+    {
+      "id": "gss-r3",
+      "title": "Bluetooth SIG public GSS YAML",
+      "url": "https://bitbucket.org/bluetooth-SIG/public.git",
+      "revision": "3b58acd4d2446e68f5539acac46c3b4941a34747"
+    },
+    {
+      "id": "esr11",
+      "title": "Bluetooth Errata Service Release 11",
+      "url": "https://www.bluetooth.org/DocMan/handlers/DownloadDoc.ashx?doc_id=436247",
+      "revision": "E8991/E9135"
+    },
+    {
+      "id": "ec-23224",
+      "title": "Bluetooth Errata Correction 23224: Update Conformance Section",
+      "url": "https://www.bluetooth.org/DocMan/handlers/DownloadDoc.ashx?doc_id=572314",
+      "revision": "v1.0 (2023-08-01)"
+    }
+  ],
+  "errata": [
+    {
+      "id": "E8991",
+      "description": "Apply corrected signed and resolution definitions from ESR11.",
+      "source": ["esr11"]
+    },
+    {
+      "id": "E9135",
+      "description": "Apply corrected Cross Trainer field definitions, including stride count resolution 0.1 stride.",
+      "source": ["esr11", "gss-r3"]
+    },
+    {
+      "id": "EC23224",
+      "description": "Apply the replacement FTMS 1.0 Section 1.1 conformance language: each capability and each supported implementation option shall be supported as specified.",
+      "source": ["ec-23224"]
+    }
+  ],
+  "features": [
+    {
+      "id": "features-all-public-bits",
+      "source": ["ftms-1.0", "gss-r3"],
+      "bytes": [255, 255, 1, 0, 255, 255, 1, 0],
+      "expected": {
+        "averageSpeedSupported": true,
+        "cadenceSupported": true,
+        "totalDistanceSupported": true,
+        "inclinationSupported": true,
+        "elevationGainSupported": true,
+        "paceSupported": true,
+        "stepCountSupported": true,
+        "resistanceLevelSupported": true,
+        "strideCountSupported": true,
+        "expendedEnergySupported": true,
+        "heartRateMeasurementSupported": true,
+        "metabolicEquivalentSupported": true,
+        "elapsedTimeSupported": true,
+        "remainingTimeSupported": true,
+        "powerMeasurementSupported": true,
+        "forceOnBeltSupported": true,
+        "userDataRetentionSupported": true,
+        "speedTargetSettingSupported": true,
+        "inclinationTargetSettingSupported": true,
+        "resistanceTargetSettingSupported": true,
+        "powerTargetSettingSupported": true,
+        "heartRateTargetSettingSupported": true,
+        "targetedExpendedEnergySupported": true,
+        "targetedStepNumberSupported": true,
+        "targetedStrideNumberSupported": true,
+        "targetedDistanceSupported": true,
+        "targetedTrainingTimeSupported": true,
+        "targetedTimeTwoHRZonesSupported": true,
+        "targetedTimeThreeHRZonesSupported": true,
+        "targetedTimeFiveHRZonesSupported": true,
+        "indoorBikeSimulationSupported": true,
+        "wheelCircumferenceSupported": true,
+        "spinDownControlSupported": true,
+        "targetedCadenceSupported": true,
+        "supportsERG": true,
+        "supportsSIM": true,
+        "supportsResistance": true
+      }
+    },
+    {
+      "id": "feature-machine-bit-0",
+      "source": ["gss-r3"],
+      "bytes": [1, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["averageSpeedSupported"]
+    },
+    {
+      "id": "feature-machine-bit-1",
+      "source": ["gss-r3"],
+      "bytes": [2, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["cadenceSupported"]
+    },
+    {
+      "id": "feature-machine-bit-2",
+      "source": ["gss-r3"],
+      "bytes": [4, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["totalDistanceSupported"]
+    },
+    {
+      "id": "feature-machine-bit-3",
+      "source": ["gss-r3"],
+      "bytes": [8, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["inclinationSupported"]
+    },
+    {
+      "id": "feature-machine-bit-4",
+      "source": ["gss-r3"],
+      "bytes": [16, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["elevationGainSupported"]
+    },
+    {
+      "id": "feature-machine-bit-5",
+      "source": ["gss-r3"],
+      "bytes": [32, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["paceSupported"]
+    },
+    {
+      "id": "feature-machine-bit-6",
+      "source": ["gss-r3"],
+      "bytes": [64, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["stepCountSupported"]
+    },
+    {
+      "id": "feature-machine-bit-7",
+      "source": ["gss-r3"],
+      "bytes": [128, 0, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["resistanceLevelSupported"]
+    },
+    {
+      "id": "feature-machine-bit-8",
+      "source": ["gss-r3"],
+      "bytes": [0, 1, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["strideCountSupported"]
+    },
+    {
+      "id": "feature-machine-bit-9",
+      "source": ["gss-r3"],
+      "bytes": [0, 2, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["expendedEnergySupported"]
+    },
+    {
+      "id": "feature-machine-bit-10",
+      "source": ["gss-r3"],
+      "bytes": [0, 4, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["heartRateMeasurementSupported"]
+    },
+    {
+      "id": "feature-machine-bit-11",
+      "source": ["gss-r3"],
+      "bytes": [0, 8, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["metabolicEquivalentSupported"]
+    },
+    {
+      "id": "feature-machine-bit-12",
+      "source": ["gss-r3"],
+      "bytes": [0, 16, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["elapsedTimeSupported"]
+    },
+    {
+      "id": "feature-machine-bit-13",
+      "source": ["gss-r3"],
+      "bytes": [0, 32, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["remainingTimeSupported"]
+    },
+    {
+      "id": "feature-machine-bit-14",
+      "source": ["gss-r3"],
+      "bytes": [0, 64, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["powerMeasurementSupported"]
+    },
+    {
+      "id": "feature-machine-bit-15",
+      "source": ["gss-r3"],
+      "bytes": [0, 128, 0, 0, 0, 0, 0, 0],
+      "expectedTrue": ["forceOnBeltSupported"]
+    },
+    {
+      "id": "feature-machine-bit-16",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 1, 0, 0, 0, 0, 0],
+      "expectedTrue": ["userDataRetentionSupported"]
+    },
+    {
+      "id": "feature-target-bit-0",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 1, 0, 0, 0],
+      "expectedTrue": ["speedTargetSettingSupported"]
+    },
+    {
+      "id": "feature-target-bit-1",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 2, 0, 0, 0],
+      "expectedTrue": ["inclinationTargetSettingSupported"]
+    },
+    {
+      "id": "feature-target-bit-2",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 4, 0, 0, 0],
+      "expectedTrue": ["resistanceTargetSettingSupported", "supportsResistance"]
+    },
+    {
+      "id": "feature-target-bit-3",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 8, 0, 0, 0],
+      "expectedTrue": ["powerTargetSettingSupported", "supportsERG"]
+    },
+    {
+      "id": "feature-target-bit-4",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 16, 0, 0, 0],
+      "expectedTrue": ["heartRateTargetSettingSupported"]
+    },
+    {
+      "id": "feature-target-bit-5",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 32, 0, 0, 0],
+      "expectedTrue": ["targetedExpendedEnergySupported"]
+    },
+    {
+      "id": "feature-target-bit-6",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 64, 0, 0, 0],
+      "expectedTrue": ["targetedStepNumberSupported"]
+    },
+    {
+      "id": "feature-target-bit-7",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 128, 0, 0, 0],
+      "expectedTrue": ["targetedStrideNumberSupported"]
+    },
+    {
+      "id": "feature-target-bit-8",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 1, 0, 0],
+      "expectedTrue": ["targetedDistanceSupported"]
+    },
+    {
+      "id": "feature-target-bit-9",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 2, 0, 0],
+      "expectedTrue": ["targetedTrainingTimeSupported"]
+    },
+    {
+      "id": "feature-target-bit-10",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 4, 0, 0],
+      "expectedTrue": ["targetedTimeTwoHRZonesSupported"]
+    },
+    {
+      "id": "feature-target-bit-11",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 8, 0, 0],
+      "expectedTrue": ["targetedTimeThreeHRZonesSupported"]
+    },
+    {
+      "id": "feature-target-bit-12",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 16, 0, 0],
+      "expectedTrue": ["targetedTimeFiveHRZonesSupported"]
+    },
+    {
+      "id": "feature-target-bit-13",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 32, 0, 0],
+      "expectedTrue": ["indoorBikeSimulationSupported", "supportsSIM"]
+    },
+    {
+      "id": "feature-target-bit-14",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 64, 0, 0],
+      "expectedTrue": ["wheelCircumferenceSupported"]
+    },
+    {
+      "id": "feature-target-bit-15",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 128, 0, 0],
+      "expectedTrue": ["spinDownControlSupported"]
+    },
+    {
+      "id": "feature-target-bit-16",
+      "source": ["gss-r3"],
+      "bytes": [0, 0, 0, 0, 0, 0, 1, 0],
+      "expectedTrue": ["targetedCadenceSupported"]
+    }
+  ],
+  "ranges": [
+    {
+      "id": "range-speed",
+      "source": ["gss-r3"],
+      "kind": "speed",
+      "bytes": [244, 1, 184, 11, 50, 0],
+      "expected": { "min": 5, "max": 30, "increment": 0.5, "unit": "km/h" }
+    },
+    {
+      "id": "range-inclination",
+      "source": ["gss-r3", "esr11"],
+      "kind": "inclination",
+      "bytes": [156, 255, 144, 1, 5, 0],
+      "expected": { "min": -10, "max": 40, "increment": 0.5, "unit": "percent" }
+    },
+    {
+      "id": "range-resistance",
+      "source": ["gss-r3", "esr11"],
+      "kind": "resistance",
+      "bytes": [1, 100, 1],
+      "expected": { "min": 1, "max": 100, "increment": 1, "unit": "level" }
+    },
+    {
+      "id": "range-heart-rate",
+      "source": ["gss-r3"],
+      "kind": "heartRate",
+      "bytes": [60, 200, 1],
+      "expected": { "min": 60, "max": 200, "increment": 1, "unit": "bpm" }
+    },
+    {
+      "id": "range-power",
+      "source": ["gss-r3"],
+      "kind": "power",
+      "bytes": [156, 255, 160, 15, 5, 0],
+      "expected": { "min": -100, "max": 4000, "increment": 5, "unit": "watts" }
+    },
+    {
+      "id": "range-speed-malformed-length",
+      "source": ["ftms-1.0"],
+      "kind": "speed",
+      "bytes": [0],
+      "expectedError": "length"
+    },
+    {
+      "id": "range-power-reversed",
+      "source": ["ftms-1.0"],
+      "kind": "power",
+      "bytes": [232, 3, 100, 0, 1, 0],
+      "expectedError": "range"
+    }
+  ],
+  "controls": [
+    {
+      "id": "control-request",
+      "source": ["ftms-1.0"],
+      "request": { "op": "requestControl" },
+      "expectedBytes": [0]
+    },
+    {
+      "id": "control-reset",
+      "source": ["ftms-1.0"],
+      "request": { "op": "reset" },
+      "expectedBytes": [1]
+    },
+    {
+      "id": "control-speed",
+      "source": ["gss-r3"],
+      "request": { "op": "setTargetSpeed", "speedKph": 12.34 },
+      "expectedBytes": [2, 210, 4]
+    },
+    {
+      "id": "control-inclination",
+      "source": ["gss-r3"],
+      "request": { "op": "setTargetInclination", "inclinationPercent": -1.2 },
+      "expectedBytes": [3, 244, 255]
+    },
+    {
+      "id": "control-resistance",
+      "source": ["esr11"],
+      "request": { "op": "setTargetResistance", "resistanceLevel": -1.2 },
+      "expectedBytes": [4, 244, 255]
+    },
+    {
+      "id": "control-power",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetPower", "powerWatts": -100 },
+      "expectedBytes": [5, 156, 255]
+    },
+    {
+      "id": "control-heart-rate",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetHeartRate", "heartRateBpm": 150 },
+      "expectedBytes": [6, 150]
+    },
+    {
+      "id": "control-start",
+      "source": ["ftms-1.0"],
+      "request": { "op": "startResume" },
+      "expectedBytes": [7]
+    },
+    {
+      "id": "control-pause",
+      "source": ["ftms-1.0"],
+      "request": { "op": "stopPause", "action": "pause" },
+      "expectedBytes": [8, 2]
+    },
+    {
+      "id": "control-energy",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedExpendedEnergy", "energyKcal": 500 },
+      "expectedBytes": [9, 244, 1]
+    },
+    {
+      "id": "control-steps",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedSteps", "steps": 600 },
+      "expectedBytes": [10, 88, 2]
+    },
+    {
+      "id": "control-strides",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedStrides", "strides": 700 },
+      "expectedBytes": [11, 188, 2]
+    },
+    {
+      "id": "control-distance",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedDistance", "distanceMeters": 66051 },
+      "expectedBytes": [12, 3, 2, 1]
+    },
+    {
+      "id": "control-training-time",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedTrainingTime", "seconds": 3600 },
+      "expectedBytes": [13, 16, 14]
+    },
+    {
+      "id": "control-two-zones",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedTimeTwoHrZones", "seconds": [10, 20] },
+      "expectedBytes": [14, 10, 0, 20, 0]
+    },
+    {
+      "id": "control-three-zones",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedTimeThreeHrZones", "seconds": [10, 20, 30] },
+      "expectedBytes": [15, 10, 0, 20, 0, 30, 0]
+    },
+    {
+      "id": "control-five-zones",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedTimeFiveHrZones", "seconds": [10, 20, 30, 40, 50] },
+      "expectedBytes": [16, 10, 0, 20, 0, 30, 0, 40, 0, 50, 0]
+    },
+    {
+      "id": "control-simulation",
+      "source": ["ftms-1.0"],
+      "request": {
+        "op": "setIndoorBikeSimulation",
+        "windSpeedMps": 1,
+        "gradePercent": 2.5,
+        "crr": 0.001,
+        "cwKgPerM": 0.2
+      },
+      "expectedBytes": [17, 232, 3, 250, 0, 10, 20]
+    },
+    {
+      "id": "control-wheel",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setWheelCircumference", "circumferenceMm": 2100 },
+      "expectedBytes": [18, 8, 82]
+    },
+    {
+      "id": "control-spin-down",
+      "source": ["ftms-1.0"],
+      "request": { "op": "spinDown", "action": "start" },
+      "expectedBytes": [19, 1]
+    },
+    {
+      "id": "control-cadence",
+      "source": ["ftms-1.0"],
+      "request": { "op": "setTargetedCadence", "cadenceRpm": 90 },
+      "expectedBytes": [20, 180, 0]
+    }
+  ],
+  "controlResponses": [
+    {
+      "id": "response-spin-down-start",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 19, 1, 232, 3, 136, 19],
+      "expected": {
+        "requestOpCode": 19,
+        "resultCode": 1,
+        "resultCodeName": "success",
+        "success": true,
+        "parameter": {
+          "kind": "spin_down_speeds",
+          "targetSpeedLowKph": 10,
+          "targetSpeedHighKph": 50
+        },
+        "issues": []
+      }
+    },
+    {
+      "id": "response-spin-down-ignore",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 19, 1],
+      "expected": {
+        "requestOpCode": 19,
+        "resultCode": 1,
+        "resultCodeName": "success",
+        "success": true,
+        "parameter": { "kind": "none" },
+        "issues": []
+      }
+    },
+    {
+      "id": "response-not-supported",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 5, 2],
+      "expected": {
+        "requestOpCode": 5,
+        "resultCode": 2,
+        "resultCodeName": "not_supported",
+        "success": false,
+        "parameter": { "kind": "none" },
+        "issues": []
+      }
+    },
+    {
+      "id": "response-invalid-parameter",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 5, 3],
+      "expected": {
+        "requestOpCode": 5,
+        "resultCode": 3,
+        "resultCodeName": "invalid_parameter",
+        "success": false,
+        "parameter": { "kind": "none" },
+        "issues": []
+      }
+    },
+    {
+      "id": "response-operation-failed",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 5, 4],
+      "expected": {
+        "requestOpCode": 5,
+        "resultCode": 4,
+        "resultCodeName": "operation_failed",
+        "success": false,
+        "parameter": { "kind": "none" },
+        "issues": []
+      }
+    },
+    {
+      "id": "response-control-not-permitted",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 5, 5],
+      "expected": {
+        "requestOpCode": 5,
+        "resultCode": 5,
+        "resultCodeName": "control_not_permitted",
+        "success": false,
+        "parameter": { "kind": "none" },
+        "issues": []
+      }
+    },
+    {
+      "id": "response-unknown-result",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 5, 6],
+      "expected": {
+        "requestOpCode": 5,
+        "resultCode": 6,
+        "resultCodeName": "unknown_0x06",
+        "success": false,
+        "parameter": { "kind": "none" },
+        "issues": ["reserved_value"]
+      }
+    },
+    {
+      "id": "response-truncated",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 5],
+      "expectedError": "malformed_response"
+    },
+    {
+      "id": "response-wrong-opcode",
+      "source": ["ftms-1.0"],
+      "bytes": [129, 5, 1],
+      "expectedError": "malformed_response"
+    },
+    {
+      "id": "response-reserved-request-opcode",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 21, 1],
+      "expectedError": "malformed_response"
+    },
+    {
+      "id": "response-unexpected-parameters",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 5, 1, 170],
+      "expectedError": "malformed_response"
+    },
+    {
+      "id": "response-spin-down-invalid-length",
+      "source": ["ftms-1.0"],
+      "bytes": [128, 19, 1, 2, 3],
+      "expectedError": "malformed_response"
+    }
+  ],
+  "measurements": [
+    {
+      "id": "measurement-treadmill-all-fields",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002acd-0000-1000-8000-00805f9b34fb",
+      "bytes": [
+        254, 31, 232, 3, 132, 3, 3, 2, 1, 241, 255, 25, 0, 123, 0, 45, 0, 44, 1, 64, 1, 244, 1, 88,
+        2, 10, 150, 85, 16, 14, 88, 2, 236, 255, 250, 0
+      ],
+      "expectedMetrics": {
+        "speedMps": 2.7777777777777777,
+        "averageSpeedMps": 2.5,
+        "distanceMeters": 66051,
+        "inclinationPercent": -1.5,
+        "rampAngleDegrees": 2.5,
+        "positiveElevationGainMeters": 12.3,
+        "negativeElevationGainMeters": 4.5,
+        "instantaneousPaceSecondsPer500m": 300,
+        "averagePaceSecondsPer500m": 320,
+        "energyKcal": 500,
+        "energyPerHourKcal": 600,
+        "energyPerMinuteKcal": 10,
+        "hrBpm": 150,
+        "metabolicEquivalent": 8.5,
+        "elapsedTimeSeconds": 3600,
+        "remainingTimeSeconds": 600,
+        "forceOnBeltNewtons": -20,
+        "powerWatts": 250
+      }
+    },
+    {
+      "id": "measurement-cross-trainer-all-fields",
+      "source": ["gss-r3", "esr11"],
+      "characteristicUuid": "00002ace-0000-1000-8000-00805f9b34fb",
+      "bytes": [
+        254, 255, 0, 232, 3, 132, 3, 3, 2, 1, 100, 0, 80, 0, 50, 0, 10, 0, 4, 0, 246, 255, 20, 0, 7,
+        200, 0, 180, 0, 44, 1, 144, 1, 5, 140, 75, 232, 3, 200, 0
+      ],
+      "expectedMetrics": {
+        "speedMps": 2.7777777777777777,
+        "averageSpeedMps": 2.5,
+        "distanceMeters": 66051,
+        "stepRateSpm": 100,
+        "averageStepRateSpm": 80,
+        "strideCount": 5,
+        "positiveElevationGainMeters": 10,
+        "negativeElevationGainMeters": 4,
+        "inclinationPercent": -1,
+        "rampAngleDegrees": 2,
+        "resistanceLevel": 7,
+        "powerWatts": 200,
+        "averagePowerWatts": 180,
+        "energyKcal": 300,
+        "energyPerHourKcal": 400,
+        "energyPerMinuteKcal": 5,
+        "hrBpm": 140,
+        "metabolicEquivalent": 7.5,
+        "elapsedTimeSeconds": 1000,
+        "remainingTimeSeconds": 200,
+        "movementDirection": "backward"
+      }
+    },
+    {
+      "id": "measurement-cross-trainer-stride-scaling",
+      "source": ["esr11"],
+      "characteristicUuid": "00002ace-0000-1000-8000-00805f9b34fb",
+      "bytes": [17, 0, 0, 123, 0],
+      "expectedMetrics": { "strideCount": 12.3 }
+    },
+    {
+      "id": "measurement-step-climber-all-fields",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002acf-0000-1000-8000-00805f9b34fb",
+      "bytes": [
+        254, 1, 12, 0, 44, 1, 60, 0, 55, 0, 10, 0, 44, 1, 144, 1, 5, 140, 75, 232, 3, 200, 0
+      ],
+      "expectedMetrics": {
+        "floorCount": 12,
+        "stepCount": 300,
+        "stepRateSpm": 60,
+        "averageStepRateSpm": 55,
+        "positiveElevationGainMeters": 10,
+        "energyKcal": 300,
+        "energyPerHourKcal": 400,
+        "energyPerMinuteKcal": 5,
+        "hrBpm": 140,
+        "metabolicEquivalent": 7.5,
+        "elapsedTimeSeconds": 1000,
+        "remainingTimeSeconds": 200
+      }
+    },
+    {
+      "id": "measurement-stair-climber-all-fields",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002ad0-0000-1000-8000-00805f9b34fb",
+      "bytes": [
+        254, 3, 20, 0, 70, 0, 65, 0, 30, 0, 250, 0, 44, 1, 144, 1, 5, 142, 80, 88, 2, 100, 0
+      ],
+      "expectedMetrics": {
+        "floorCount": 20,
+        "stepRateSpm": 70,
+        "averageStepRateSpm": 65,
+        "positiveElevationGainMeters": 30,
+        "strideCount": 250,
+        "energyKcal": 300,
+        "energyPerHourKcal": 400,
+        "energyPerMinuteKcal": 5,
+        "hrBpm": 142,
+        "metabolicEquivalent": 8,
+        "elapsedTimeSeconds": 600,
+        "remainingTimeSeconds": 100
+      }
+    },
+    {
+      "id": "measurement-rower-all-fields",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002ad1-0000-1000-8000-00805f9b34fb",
+      "bytes": [
+        254, 31, 64, 44, 1, 60, 244, 1, 0, 120, 0, 130, 0, 250, 0, 240, 0, 8, 44, 1, 144, 1, 5, 145,
+        80, 88, 2, 100, 0
+      ],
+      "expectedMetrics": {
+        "strokeRateSpm": 32,
+        "strokeCount": 300,
+        "averageStrokeRateSpm": 30,
+        "distanceMeters": 500,
+        "instantaneousPaceSecondsPer500m": 120,
+        "averagePaceSecondsPer500m": 130,
+        "powerWatts": 250,
+        "averagePowerWatts": 240,
+        "resistanceLevel": 8,
+        "energyKcal": 300,
+        "energyPerHourKcal": 400,
+        "energyPerMinuteKcal": 5,
+        "hrBpm": 145,
+        "metabolicEquivalent": 8,
+        "elapsedTimeSeconds": 600,
+        "remainingTimeSeconds": 100
+      }
+    },
+    {
+      "id": "measurement-bike-all-fields",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002ad2-0000-1000-8000-00805f9b34fb",
+      "bytes": [
+        254, 31, 232, 3, 132, 3, 180, 0, 170, 0, 232, 3, 0, 8, 250, 0, 240, 0, 44, 1, 144, 1, 5,
+        145, 80, 88, 2, 100, 0
+      ],
+      "expectedMetrics": {
+        "speedMps": 2.7777777777777777,
+        "averageSpeedMps": 2.5,
+        "cadenceRpm": 90,
+        "averageCadenceRpm": 85,
+        "distanceMeters": 1000,
+        "resistanceLevel": 8,
+        "powerWatts": 250,
+        "averagePowerWatts": 240,
+        "energyKcal": 300,
+        "energyPerHourKcal": 400,
+        "energyPerMinuteKcal": 5,
+        "hrBpm": 145,
+        "metabolicEquivalent": 8,
+        "elapsedTimeSeconds": 600,
+        "remainingTimeSeconds": 100
+      }
+    },
+    {
+      "id": "measurement-bike-valid-max-int16-power",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002ad2-0000-1000-8000-00805f9b34fb",
+      "bytes": [65, 0, 255, 127],
+      "expectedMetrics": { "powerWatts": 32767 }
+    }
+  ],
+  "statuses": [
+    {
+      "id": "status-training-string",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002ad3-0000-1000-8000-00805f9b34fb",
+      "bytes": [1, 13, 109, 97, 110, 117, 97, 108],
+      "expectedStatus": {
+        "code": 13,
+        "label": "manual_mode",
+        "details": {
+          "kind": "training_status",
+          "flags": 1,
+          "stringPresent": true,
+          "extendedStringPresent": false,
+          "trainingStatusString": "manual"
+        }
+      }
+    },
+    {
+      "id": "status-machine-speed",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ada-0000-1000-8000-00805f9b34fb",
+      "bytes": [5, 210, 4],
+      "expectedStatus": {
+        "code": 5,
+        "label": "target_speed_changed",
+        "details": { "kind": "speed", "speedKph": 12.34 }
+      }
+    },
+    {
+      "id": "status-machine-simulation",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ada-0000-1000-8000-00805f9b34fb",
+      "bytes": [18, 232, 3, 250, 0, 10, 20],
+      "expectedStatus": {
+        "code": 18,
+        "label": "indoor_bike_simulation_parameters_changed",
+        "details": {
+          "kind": "simulation",
+          "windSpeedMps": 1,
+          "gradePercent": 2.5,
+          "crr": 0.001,
+          "cwKgPerM": 0.2
+        }
+      }
+    },
+    {
+      "id": "status-machine-permission-lost",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ada-0000-1000-8000-00805f9b34fb",
+      "bytes": [255],
+      "expectedStatus": {
+        "code": 255,
+        "label": "control_permission_lost",
+        "details": { "kind": "none" }
+      }
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "diagnostic-treadmill-unavailable",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002acd-0000-1000-8000-00805f9b34fb",
+      "bytes": [136, 16, 232, 3, 255, 127, 255, 127, 255, 255, 255, 255, 255, 255, 127, 255, 127],
+      "expectedTruncated": false,
+      "expectedIssues": ["unavailable"],
+      "expectedMetrics": {
+        "inclinationPercent": null,
+        "rampAngleDegrees": null,
+        "energyKcal": null,
+        "energyPerHourKcal": null,
+        "energyPerMinuteKcal": null,
+        "forceOnBeltNewtons": null,
+        "powerWatts": null
+      }
+    },
+    {
+      "id": "diagnostic-cross-trainer-unavailable-stride",
+      "source": ["gss-r3", "esr11"],
+      "characteristicUuid": "00002ace-0000-1000-8000-00805f9b34fb",
+      "bytes": [25, 8, 0, 255, 255, 255, 255, 123, 0, 150],
+      "expectedTruncated": false,
+      "expectedIssues": ["more_data", "unavailable"],
+      "expectedMetrics": {
+        "stepRateSpm": null,
+        "averageStepRateSpm": null,
+        "strideCount": 12.3,
+        "hrBpm": 150
+      }
+    },
+    {
+      "id": "diagnostic-bike-truncated",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ad2-0000-1000-8000-00805f9b34fb",
+      "bytes": [65, 0, 1],
+      "expectedTruncated": true,
+      "expectedIssues": ["more_data", "truncated"],
+      "expectedMetrics": { "powerWatts": null }
+    },
+    {
+      "id": "diagnostic-bike-trailing",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ad2-0000-1000-8000-00805f9b34fb",
+      "bytes": [0, 0, 232, 3, 170],
+      "expectedTruncated": false,
+      "expectedIssues": ["trailing_bytes"]
+    },
+    {
+      "id": "diagnostic-treadmill-reserved-flags",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002acd-0000-1000-8000-00805f9b34fb",
+      "bytes": [0, 32, 232, 3],
+      "expectedTruncated": false,
+      "expectedIssues": ["reserved_flags"]
+    },
+    {
+      "id": "diagnostic-training-invalid-flags",
+      "source": ["gss-r3"],
+      "characteristicUuid": "00002ad3-0000-1000-8000-00805f9b34fb",
+      "bytes": [134, 1],
+      "expectedTruncated": false,
+      "expectedIssues": ["reserved_flags", "invalid_flags"],
+      "expectedStatusCode": 1
+    },
+    {
+      "id": "diagnostic-training-reserved-value",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ad3-0000-1000-8000-00805f9b34fb",
+      "bytes": [0, 16],
+      "expectedTruncated": false,
+      "expectedIssues": ["reserved_value"],
+      "expectedStatusCode": 16
+    },
+    {
+      "id": "diagnostic-machine-unknown-opcode",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ada-0000-1000-8000-00805f9b34fb",
+      "bytes": [34, 1, 2],
+      "expectedTruncated": false,
+      "expectedIssues": ["unknown_opcode"],
+      "expectedStatusCode": 34
+    },
+    {
+      "id": "diagnostic-machine-reserved-value",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ada-0000-1000-8000-00805f9b34fb",
+      "bytes": [2, 3],
+      "expectedTruncated": false,
+      "expectedIssues": ["reserved_value"],
+      "expectedStatusCode": 2
+    },
+    {
+      "id": "diagnostic-machine-empty",
+      "source": ["ftms-1.0"],
+      "characteristicUuid": "00002ada-0000-1000-8000-00805f9b34fb",
+      "bytes": [],
+      "expectedTruncated": true,
+      "expectedIssues": ["truncated"],
+      "expectedStatusCode": null
+    }
+  ]
+}

@@ -10,7 +10,7 @@ First technical goal: Echo Bike V3 → BLE → FTMS → Canonical Telemetry → 
 
 This page is analysis only. Nothing here is implemented yet.
 
-## Where the v0.1 code stands
+## Where the v0.1 code stood (before plan steps 2–5)
 
 | Target layer | Current code | Fit |
 | --- | --- | --- |

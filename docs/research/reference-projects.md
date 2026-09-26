@@ -21,7 +21,7 @@ Most relevant project for the protocol layer.
 * Normalises units: speed in m/s, `null` for "Data Not Available", diagnostics for
   truncation, reserved flags, trailing bytes and More Data (reported, README).
 * Deliberately does **not** reassemble More Data fragments; the caller owns that (reported).
-  We already do this in `src/ftms/dataRecord.ts`.
+  We already do this in `src/protocol/ftms/dataRecord.ts`.
 * `conformance/v1/vectors.json`: language-neutral test vectors (35 feature, 7 range, 21 control,
   12 control-response, 8 measurement, 4 status vectors) with provenance: FTMS 1.0, Bluetooth
   SIG public GSS YAML (revision `3b58acd4…`), Errata Service Release 11 (verified by inspection).

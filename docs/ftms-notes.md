@@ -16,21 +16,21 @@ from [bluetooth.com](https://www.bluetooth.com/specifications/specs/).
 
 | Requirement | Reference | Code |
 | --- | --- | --- |
-| Discover the Fitness Machine Service and its characteristics | FTMP §4.2–4.3 | `src/device/webBluetooth.ts` |
-| Read Fitness Machine Feature | FTMP §4.4.1 | `src/device/webBluetooth.ts`, `src/ftms/machineInfo.ts` |
-| Configure notifications of Indoor Bike Data | FTMP §4.4.7 | `src/device/webBluetooth.ts` |
-| Determine present fields from the Flags field | FTMP §4.4.7 | `src/ftms/indoorBikeData.ts` |
-| Handle Data Records split over several notifications (More Data) | FTMP §4.4.7, FTMS §4.19 | `src/ftms/dataRecord.ts` |
-| Ignore RFU flag bits and unrecognised trailing octets | FTMP §4.4.7 | `src/ftms/indoorBikeData.ts` |
-| Tolerate "Data Not Available" special values | FTMP §4.4.7, FTMS §4.9.1.10–12 | `src/ftms/indoorBikeData.ts` |
-| Should configure notifications of Training Status | FTMP §4.4.8 | `src/device/webBluetooth.ts` |
-| Discard a partial Data Record after link loss | FTMS §4.18 | `src/ftms/dataRecord.ts`, `src/telemetry/engine.ts` |
-| Receive Fitness Machine Feature indications (features may change) | FTMS v1.0.1 §4.3.1, ICS 4/44 | `src/device/webBluetooth.ts` |
+| Discover the Fitness Machine Service and its characteristics | FTMP §4.2–4.3 | `src/adapters/ftms-indoor-bike/adapter.ts` |
+| Read Fitness Machine Feature | FTMP §4.4.1 | `src/adapters/ftms-indoor-bike/adapter.ts`, `src/protocol/ftms/machineInfo.ts` |
+| Configure notifications of Indoor Bike Data | FTMP §4.4.7 | `src/adapters/ftms-indoor-bike/adapter.ts` |
+| Determine present fields from the Flags field | FTMP §4.4.7 | `src/protocol/ftms/indoorBikeData.ts` |
+| Handle Data Records split over several notifications (More Data) | FTMP §4.4.7, FTMS §4.19 | `src/protocol/ftms/dataRecord.ts` |
+| Ignore RFU flag bits and unrecognised trailing octets | FTMP §4.4.7 | `src/protocol/ftms/indoorBikeData.ts` |
+| Tolerate "Data Not Available" special values | FTMP §4.4.7, FTMS §4.9.1.10–12 | `src/protocol/ftms/indoorBikeData.ts` |
+| Should configure notifications of Training Status | FTMP §4.4.8 | `src/adapters/ftms-indoor-bike/adapter.ts` |
+| Discard a partial Data Record after link loss | FTMS §4.18 | `src/protocol/ftms/dataRecord.ts`, `src/adapters/ftms-indoor-bike/adapter.ts` |
+| Receive Fitness Machine Feature indications (features may change) | FTMS v1.0.1 §4.3.1, ICS 4/44 | `src/adapters/ftms-indoor-bike/adapter.ts` |
 
 ## What the test suite and ICS tell us about the bike
 
 The test suite only exercises servers, but it states precisely what a qualified bike sends. The
-checks in `src/ftms/conformance.ts` apply those expectations to the live data stream and are shown
+checks in `src/protocol/ftms/conformance.ts` apply those expectations to the live data stream and are shown
 under **Diagnostics → FTMS conformance** and included in every packet capture.
 
 | Check | Source | Expectation |
