@@ -519,7 +519,9 @@ Development guidelines will be added as the architecture stabilizes.
 
 ## License
 
-License to be determined before the first public release.
+OpenAirBike is licensed under the [Apache License 2.0](LICENSE).
+
+Copyright 2026 Ecksolution-IT
 
 ---
 
