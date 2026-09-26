@@ -1,26 +1,12 @@
+import { shortUuid, uuid16 } from '../util/bleUuid';
 import {
-  DEVICE_INFORMATION_SERVICE,
-  DeviceInformationCharacteristic,
-  FTMS_SERVICE,
-  FtmsCharacteristic,
-  HEART_RATE_SERVICE,
-  BATTERY_SERVICE,
-  shortUuid,
-  uuid16,
-  uuidName,
-} from '../protocol/ftms/uuids';
-import { parseFitnessMachineFeature } from '../protocol/ftms/machineInfo';
-import { BikeConnection, type BikeInfo, type ConnectionState } from './types';
-
-/** Name prefixes to offer in the chooser even if the bike does not advertise the FTMS UUID. */
-const NAME_PREFIXES = ['Echo', 'ECHO', 'Rogue', 'ROGUE'];
-
-/** Characteristics OpenAirBike subscribes to, in order. Only Indoor Bike Data is required. */
-const SUBSCRIPTIONS = [
-  FtmsCharacteristic.IndoorBikeData,
-  FtmsCharacteristic.TrainingStatus,
-  FtmsCharacteristic.FitnessMachineStatus,
-];
+  Transport,
+  type CharacteristicInfo,
+  type ConnectionState,
+  type DeviceFilter,
+  type GattLink,
+  type SessionSetup,
+} from './types';
 
 const CONNECT_TIMEOUT_MS = 20_000;
 const RECONNECT_DELAYS_MS = [1_000, 2_000, 4_000, 8_000, 15_000, 30_000, 30_000, 30_000];
@@ -30,18 +16,21 @@ export function isWebBluetoothAvailable(): boolean {
 }
 
 /** Opens the browser's device chooser. Must be called from a user gesture (click). */
-export async function requestBike(): Promise<BluetoothDevice> {
+export async function requestDevice(filter: DeviceFilter): Promise<BluetoothDevice> {
   return navigator.bluetooth.requestDevice({
-    filters: [{ services: [uuid16(FTMS_SERVICE)] }, ...NAME_PREFIXES.map((namePrefix) => ({ namePrefix }))],
-    optionalServices: [FTMS_SERVICE, DEVICE_INFORMATION_SERVICE, HEART_RATE_SERVICE, BATTERY_SERVICE].map(uuid16),
+    filters: [
+      ...filter.services.map((s) => ({ services: [uuid16(s)] })),
+      ...filter.namePrefixes.map((namePrefix) => ({ namePrefix })),
+    ],
+    optionalServices: [...new Set([...filter.services, ...filter.optionalServices])].map(uuid16),
   });
 }
 
 /**
- * Looks up a bike the user has already granted access to, so it can be reconnected
+ * Looks up a device the user has already granted access to, so it can be reconnected
  * without the chooser. Returns undefined where the browser lacks `getDevices()`.
  */
-export async function findPermittedBike(id: string): Promise<BluetoothDevice | undefined> {
+export async function findPermittedDevice(id: string): Promise<BluetoothDevice | undefined> {
   const bluetooth = navigator.bluetooth as Bluetooth & { getDevices?: () => Promise<BluetoothDevice[]> };
   if (!bluetooth.getDevices) return undefined;
   const devices = await bluetooth.getDevices();
@@ -60,12 +49,68 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Device Layer implementation for a real FTMS bike over Web Bluetooth. */
-export class WebBluetoothBike extends BikeConnection {
+/** GATT operations on one live connection; caches services and characteristics. */
+class WebBluetoothLink implements GattLink {
+  private readonly services = new Map<number, Map<number, BluetoothRemoteGATTCharacteristic> | undefined>();
+
+  constructor(
+    private readonly server: BluetoothRemoteGATTServer,
+    private readonly onValue: (event: Event) => void,
+  ) {}
+
+  private async service(service: number) {
+    if (!this.services.has(service)) {
+      let chars: Map<number, BluetoothRemoteGATTCharacteristic> | undefined;
+      try {
+        const s = await this.server.getPrimaryService(uuid16(service));
+        chars = new Map();
+        for (const c of await s.getCharacteristics()) {
+          const short = shortUuid(c.uuid);
+          if (short !== undefined) chars.set(short, c);
+        }
+      } catch {
+        chars = undefined; // Service not present (or not permitted).
+      }
+      this.services.set(service, chars);
+    }
+    return this.services.get(service);
+  }
+
+  private async characteristic(service: number, characteristic: number) {
+    const c = (await this.service(service))?.get(characteristic);
+    if (!c) throw new Error(`Characteristic 0x${characteristic.toString(16)} not found in service 0x${service.toString(16)}.`);
+    return c;
+  }
+
+  async characteristics(service: number): Promise<CharacteristicInfo[] | undefined> {
+    const chars = await this.service(service);
+    if (!chars) return undefined;
+    return [...chars.entries()].map(([uuid, c]) => ({
+      uuid,
+      read: c.properties.read,
+      notify: c.properties.notify,
+      indicate: c.properties.indicate,
+    }));
+  }
+
+  async read(service: number, characteristic: number): Promise<DataView> {
+    return (await this.characteristic(service, characteristic)).readValue();
+  }
+
+  async subscribe(service: number, characteristic: number): Promise<void> {
+    const c = await this.characteristic(service, characteristic);
+    // Same function reference on every (re)subscription, so the listener is never added twice.
+    c.addEventListener('characteristicvaluechanged', this.onValue);
+    await c.startNotifications();
+  }
+}
+
+/** Transport over Web Bluetooth, with automatic reconnect and backoff. */
+export class WebBluetoothTransport extends Transport {
   private _state: ConnectionState = 'disconnected';
-  private _info: BikeInfo | undefined;
   private userDisconnected = false;
   private reconnecting = false;
+  private setup: SessionSetup | undefined;
 
   constructor(private readonly device: BluetoothDevice) {
     super();
@@ -76,15 +121,20 @@ export class WebBluetoothBike extends BikeConnection {
     return this._state;
   }
 
-  get info(): BikeInfo | undefined {
-    return this._info;
+  get deviceId(): string {
+    return this.device.id;
   }
 
-  async connect(): Promise<void> {
+  get deviceName(): string | undefined {
+    return this.device.name ?? undefined;
+  }
+
+  async connect(setup: SessionSetup): Promise<void> {
+    this.setup = setup;
     this.userDisconnected = false;
     this.setState('connecting');
     try {
-      await withTimeout(this.setup(), CONNECT_TIMEOUT_MS, 'Timed out while connecting to the bike.');
+      await withTimeout(this.open(), CONNECT_TIMEOUT_MS, 'Timed out while connecting.');
       this.setState('connected');
     } catch (err) {
       // Mark as intentional so the disconnect below does not trigger the reconnect loop.
@@ -107,110 +157,22 @@ export class WebBluetoothBike extends BikeConnection {
     this.emit('state', state);
   }
 
-  /** GATT connection, FTMS discovery (FTMP §4.2–4.3) and notification setup. */
-  private async setup(): Promise<void> {
+  private async open(): Promise<void> {
     const gatt = this.device.gatt;
     if (!gatt) throw new Error('This device does not support GATT.');
-    this.emit('log', `Connecting to ${this.device.name ?? 'bike'}…`);
+    this.emit('log', `Connecting to ${this.device.name ?? 'device'}…`);
     const server = await gatt.connect();
-
-    let service: BluetoothRemoteGATTService;
-    try {
-      service = await server.getPrimaryService(uuid16(FTMS_SERVICE));
-    } catch {
-      throw new Error('This device does not expose the Bluetooth Fitness Machine Service (FTMS).');
-    }
-
-    const characteristics = new Map<number, BluetoothRemoteGATTCharacteristic>();
-    for (const c of await service.getCharacteristics()) {
-      const short = shortUuid(c.uuid);
-      if (short !== undefined) characteristics.set(short, c);
-    }
-    const names = [...characteristics.keys()].map((k) => uuidName(k));
-    this.emit('log', `FTMS characteristics: ${names.join(', ') || 'none'}`);
-
-    const info: BikeInfo = {
-      ...this._info,
-      id: this.device.id,
-      name: this.device.name ?? 'Unknown bike',
-      characteristics: names,
-      characteristicIds: [...characteristics.keys()],
-    };
-
-    const feature = characteristics.get(FtmsCharacteristic.FitnessMachineFeature);
-    if (feature) {
-      try {
-        info.features = parseFitnessMachineFeature(await feature.readValue());
-        this.emit('log', `Features: ${info.features.machineFeatures.join(', ') || 'none'}`);
-      } catch (err) {
-        this.emit('log', `Could not read Fitness Machine Feature: ${String(err)}`);
-      }
-      // FTMS 1.0.1 servers indicate the characteristic when their features change (ICS FTMS 4/44).
-      if (feature.properties.indicate) {
-        feature.addEventListener('characteristicvaluechanged', this.onValue);
-        await feature.startNotifications().catch((err) => this.emit('log', `Feature indications unavailable: ${String(err)}`));
-      }
-    }
-
-    if (!characteristics.has(FtmsCharacteristic.IndoorBikeData)) {
-      throw new Error(`The bike does not expose Indoor Bike Data. Found: ${names.join(', ') || 'nothing'}.`);
-    }
-
-    for (const uuid of SUBSCRIPTIONS) {
-      const c = characteristics.get(uuid);
-      if (!c) continue;
-      c.addEventListener('characteristicvaluechanged', this.onValue);
-      try {
-        await c.startNotifications();
-        this.emit('log', `Subscribed to ${uuidName(uuid)}`);
-      } catch (err) {
-        if (uuid === FtmsCharacteristic.IndoorBikeData) throw err;
-        this.emit('log', `Could not subscribe to ${uuidName(uuid)}: ${String(err)}`);
-      }
-    }
-
-    if (!this._info) await this.readDeviceInformation(server, info);
-    this._info = info;
-    this.emit('info', info);
+    await this.setup!(new WebBluetoothLink(server, this.onValue));
   }
 
-  private async readDeviceInformation(server: BluetoothRemoteGATTServer, info: BikeInfo) {
-    let service: BluetoothRemoteGATTService;
-    try {
-      service = await server.getPrimaryService(uuid16(DEVICE_INFORMATION_SERVICE));
-    } catch {
-      return; // Device Information Service is optional.
-    }
-    const fields: [keyof BikeInfo, number][] = [
-      ['manufacturer', DeviceInformationCharacteristic.ManufacturerName],
-      ['model', DeviceInformationCharacteristic.ModelNumber],
-      ['firmware', DeviceInformationCharacteristic.FirmwareRevision],
-      ['hardware', DeviceInformationCharacteristic.HardwareRevision],
-      ['software', DeviceInformationCharacteristic.SoftwareRevision],
-    ];
-    for (const [key, uuid] of fields) {
-      try {
-        const value = await (await service.getCharacteristic(uuid16(uuid))).readValue();
-        (info as unknown as Record<string, string>)[key] = new TextDecoder().decode(value).replace(/\0+$/, '').trim();
-      } catch {
-        // Not every characteristic is present; ignore the missing ones.
-      }
-    }
-  }
-
-  // Same function reference on every (re)subscription, so the listener is never added twice.
   private readonly onValue = (event: Event) => {
     const c = event.target as BluetoothRemoteGATTCharacteristic;
-    const short = shortUuid(c.uuid);
-    if (!c.value || short === undefined) return;
+    const characteristic = shortUuid(c.uuid);
+    const service = shortUuid(c.service.uuid);
+    if (!c.value || characteristic === undefined || service === undefined) return;
     // Copy: the browser may reuse the underlying buffer for the next notification.
     const value = new DataView(c.value.buffer.slice(c.value.byteOffset, c.value.byteOffset + c.value.byteLength));
-    this.emit('notification', { characteristic: short, value, receivedAt: Date.now() });
-    if (short === FtmsCharacteristic.FitnessMachineFeature && this._info) {
-      this._info = { ...this._info, features: parseFitnessMachineFeature(value) };
-      this.emit('log', `Features changed: ${this._info.features!.machineFeatures.join(', ') || 'none'}`);
-      this.emit('info', this._info);
-    }
+    this.emit('notification', { service, characteristic, value, receivedAt: Date.now() });
   };
 
   private async onDisconnected() {
@@ -223,7 +185,7 @@ export class WebBluetoothBike extends BikeConnection {
         await sleep(RECONNECT_DELAYS_MS[attempt]);
         if (this.userDisconnected) return;
         try {
-          await withTimeout(this.setup(), CONNECT_TIMEOUT_MS, 'Reconnect timed out.');
+          await withTimeout(this.open(), CONNECT_TIMEOUT_MS, 'Reconnect timed out.');
           if (this.userDisconnected) {
             this.device.gatt?.disconnect();
             return;
@@ -235,7 +197,7 @@ export class WebBluetoothBike extends BikeConnection {
           this.emit('log', `Reconnect attempt ${attempt + 1} failed: ${String(err)}`);
         }
       }
-      this.emit('log', 'Giving up reconnecting. Connect the bike again to continue.');
+      this.emit('log', 'Giving up reconnecting. Connect the device again to continue.');
       this.setState('disconnected');
     } finally {
       this.reconnecting = false;

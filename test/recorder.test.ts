@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Accumulator, KCAL_PER_WATT_SECOND, WorkoutRecorder } from '../src/recording/recorder';
 import { summarize } from '../src/recording/workout';
-import type { TelemetrySample } from '../src/telemetry/engine';
+import type { DeviceCounters, TelemetrySample } from '../src/telemetry/types';
 
 const T0 = Date.UTC(2026, 8, 26, 7, 0, 0);
 const at = (seconds: number) => T0 + seconds * 1000;
@@ -45,7 +45,11 @@ describe('Accumulator', () => {
 });
 
 describe('WorkoutRecorder', () => {
-  const sample = (seconds: number, extra: Partial<TelemetrySample> = {}): TelemetrySample => ({ at: at(seconds), ...extra });
+  // Flat test input; distance and energy are the device's own running counters.
+  const sample = (
+    seconds: number,
+    { distanceM, energyKcal, ...metrics }: Partial<Omit<TelemetrySample, 'deviceCounters'>> & DeviceCounters = {},
+  ): TelemetrySample => ({ at: at(seconds), ...metrics, deviceCounters: { distanceM, energyKcal } });
 
   it('records a workout with pause and resume', () => {
     const r = new WorkoutRecorder({ name: 'Echo Bike' });

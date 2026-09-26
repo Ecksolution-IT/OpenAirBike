@@ -1,6 +1,5 @@
 import type { App } from '../app/app';
-import type { ConnectionState } from '../transport/types';
-import { isWebBluetoothAvailable } from '../transport/webBluetooth';
+import type { ConnectionState } from '../app/app';
 import { download } from '../persistence/export';
 import { h, navigate, setText, type View } from './dom';
 import { formatDateTime, formatDuration, formatNumber } from './format';
@@ -76,7 +75,7 @@ export function homeView(app: App): View {
 
     const view = h('div', { class: 'stack' },
       h('header', { class: 'title' }, h('h1', {}, 'OPENAIRBIKE')),
-      !isWebBluetoothAvailable() &&
+      !app.bluetoothAvailable &&
         h('div', { class: 'card warning' },
           h('p', {}, 'This browser does not support Web Bluetooth. Use Chrome or Edge on desktop or Android, served over HTTPS or localhost.'),
           h('p', {}, 'You can still try OpenAirBike with the demo bike.'),
@@ -98,7 +97,7 @@ export function homeView(app: App): View {
 
     let conformanceKey = '';
     const renderConformance = () => {
-      const checks = app.conformance.report();
+      const checks = app.diagnostics();
       const key = JSON.stringify(checks);
       if (key === conformanceKey) return;
       conformanceKey = key;
@@ -122,7 +121,7 @@ export function homeView(app: App): View {
 
       const buttons: HTMLElement[] = [];
       if (state === 'disconnected') {
-        if (isWebBluetoothAvailable()) {
+        if (app.bluetoothAvailable) {
           buttons.push(h('button', { onclick: run(() => app.connectBluetooth()) }, 'Connect bike'));
           if (remembered) {
             buttons.push(h('button', { class: 'secondary', onclick: run(async () => {
@@ -146,7 +145,7 @@ export function homeView(app: App): View {
       setText(bikeName, info ? [info.name, info.manufacturer, info.model].filter(Boolean).join(' · ') : '');
       renderActions();
 
-      const s = app.engine.current();
+      const s = app.telemetry.current();
       preview.hidden = !s;
       if (s) setText(preview, `${formatNumber(s.powerW)} W · ${formatNumber(s.cadenceRpm)} RPM · ${formatNumber(s.speedKmh, 1)} km/h`);
 

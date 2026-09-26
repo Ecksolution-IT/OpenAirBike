@@ -74,9 +74,9 @@ export function liveView(app: App): View {
 
     const update = () => {
       const now = Date.now();
-      const s = app.engine.current(now);
+      const s = app.telemetry.current(now);
       if (s?.heartRateBpm !== undefined) heartRateSeen = true;
-      if (app.bikeInfo?.features?.machineFeatures.includes('Heart Rate Measurement')) heartRateSeen = true;
+      if (app.bikeInfo?.capabilities?.includes('heartRate')) heartRateSeen = true;
 
       setText(power.value, formatNumber(s?.powerW));
       setText(cadence.value, formatNumber(s?.cadenceRpm));

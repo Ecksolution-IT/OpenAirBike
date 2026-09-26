@@ -1,49 +1,65 @@
-import type { FitnessMachineFeature } from '../protocol/ftms/machineInfo';
 import { Emitter } from '../util/emitter';
+
+/**
+ * Transport layer: BLE connection lifecycle and GATT operations. It moves bytes and knows
+ * nothing about FTMS or any device; the Device Adapter decides what to discover and subscribe.
+ * All UUIDs are 16-bit Bluetooth SIG assigned numbers.
+ */
 
 export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 
-/** What OpenAirBike learned about the connected machine during discovery. */
-export interface BikeInfo {
-  id: string;
-  name: string;
-  manufacturer?: string;
-  model?: string;
-  firmware?: string;
-  hardware?: string;
-  software?: string;
-  /** Names of the FTMS characteristics the bike exposes. */
-  characteristics: string[];
-  /** 16-bit UUIDs of the FTMS characteristics the bike exposes. */
-  characteristicIds: number[];
-  features?: FitnessMachineFeature;
-  simulated?: boolean;
+export interface CharacteristicInfo {
+  uuid: number;
+  read: boolean;
+  notify: boolean;
+  indicate: boolean;
 }
 
-/** A raw characteristic notification, before any parsing. */
-export interface Notification {
-  /** 16-bit characteristic UUID. */
+/** A characteristic notification or indication, before any parsing. */
+export interface GattNotification {
+  service: number;
   characteristic: number;
   value: DataView;
   /** Epoch milliseconds when the notification was received. */
   receivedAt: number;
 }
 
-export type BikeEvents = {
+/** GATT operations available while connected. */
+export interface GattLink {
+  /** Characteristics of a primary service, or undefined if the device lacks the service. */
+  characteristics(service: number): Promise<CharacteristicInfo[] | undefined>;
+  read(service: number, characteristic: number): Promise<DataView>;
+  /** Enables notifications or indications; values arrive as `notification` events. */
+  subscribe(service: number, characteristic: number): Promise<void>;
+}
+
+/**
+ * Runs after every (re)connection. The Device Adapter discovers services and subscribes here.
+ * Throwing aborts the connection attempt.
+ */
+export type SessionSetup = (link: GattLink) => Promise<void>;
+
+/** What the device chooser offers: devices advertising one of `services` or matching a name prefix. */
+export interface DeviceFilter {
+  services: number[];
+  namePrefixes: string[];
+  /** Services the adapter may access in addition to the filter services. */
+  optionalServices: number[];
+}
+
+export type TransportEvents = {
   state: ConnectionState;
-  info: BikeInfo;
-  notification: Notification;
-  /** Human-readable connection log line (discovery, errors, reconnect attempts). */
+  notification: GattNotification;
+  /** Human-readable connection log line. */
   log: string;
 };
 
-/**
- * The Device Layer: anything that produces raw FTMS notifications.
- * Implemented by the Web Bluetooth connection and by the built-in simulator.
- */
-export abstract class BikeConnection extends Emitter<BikeEvents> {
+export abstract class Transport extends Emitter<TransportEvents> {
   abstract readonly state: ConnectionState;
-  abstract readonly info: BikeInfo | undefined;
-  abstract connect(): Promise<void>;
+  /** Stable identifier of the remote device (per browser profile for Web Bluetooth). */
+  abstract readonly deviceId: string;
+  abstract readonly deviceName: string | undefined;
+  /** Connects, runs `setup`, and re-runs it after every automatic reconnect. */
+  abstract connect(setup: SessionSetup): Promise<void>;
   abstract disconnect(): Promise<void>;
 }
