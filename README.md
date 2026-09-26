@@ -328,6 +328,34 @@ Rogue Echo Bike V3
 
 Cloud infrastructure is not required for the first version.
 
+### Implementation
+
+v0.1 is a browser app written in TypeScript. It talks to the bike through
+[Web Bluetooth](https://developer.mozilla.org/docs/Web/API/Web_Bluetooth_API), so there is nothing to
+install and no server: the app is a set of static files, and workouts stay in the browser's IndexedDB.
+
+| Layer            | Code                        | Responsibility                                                                              |
+| ---------------- | --------------------------- | ------------------------------------------------------------------------------------------- |
+| Device Layer     | `src/device/`               | Discover, connect, reconnect with backoff, subscribe to notifications. Includes a simulator. |
+| FTMS Parser      | `src/ftms/`                 | Indoor Bike Data, Data Record reassembly (More Data), Feature, Training / Machine Status.    |
+| Telemetry Engine | `src/telemetry/`            | Turns raw notifications into complete, normalized samples; detects stale data.             |
+| Recorder         | `src/recorder/`             | Start / pause / resume / stop, distance and calorie accounting, workout summary.           |
+| Local Storage    | `src/storage/`              | IndexedDB workouts, crash-recovery draft, JSON / CSV export.                                |
+| Dashboard / UI   | `src/ui/`, `src/app.ts`     | Connect screen, live training screen, summary, history.                                     |
+
+The FTMS implementation follows the Bluetooth SIG *Fitness Machine Service* and *Fitness Machine Profile*
+v1.0.1 (collector role). Notable details:
+
+* Indoor Bike Data records split across several notifications are reassembled (FTMS §4.19), and a
+  partial record is dropped after link loss (FTMS §4.18).
+* RFU flag bits, extra trailing octets and "Data Not Available" values are tolerated (FTMP §4.4.7).
+* The bike's distance and energy counters belong to *its* session, not the workout. OpenAirBike only
+  uses the deltas between readings, so a workout can start at any time, pauses are respected and a
+  console reset does not corrupt the totals. Bikes without those counters fall back to integrating
+  speed and power.
+* When the console reports "stopped / paused by the user" or "started / resumed" via Fitness Machine
+  Status, the workout pauses or resumes with it.
+
 ---
 
 ## Roadmap
@@ -336,15 +364,18 @@ Cloud infrastructure is not required for the first version.
 
 **Goal:** Reliable connection and workout recording.
 
-* [ ] discover Rogue Echo Bike V3
-* [ ] connect via BLE
-* [ ] identify FTMS services
-* [ ] read telemetry
-* [ ] display live metrics
-* [ ] start / stop workout
-* [ ] store workout locally
-* [ ] workout summary
-* [ ] workout history
+* [x] discover Rogue Echo Bike V3
+* [x] connect via BLE
+* [x] identify FTMS services
+* [x] read telemetry
+* [x] display live metrics
+* [x] start / stop workout
+* [x] store workout locally
+* [x] workout summary
+* [x] workout history
+
+Implemented against the FTMS specification and the built-in simulator; validation on real
+Rogue Echo Bike V3 hardware is in progress (see [Project Status](#project-status)).
 
 ### v0.2 — Train
 
@@ -416,6 +447,55 @@ The project should first solve one problem extremely well:
 The project currently focuses on validating communication with the Rogue Echo Bike V3 and understanding the telemetry exposed through FTMS.
 
 Expect breaking changes.
+
+The v0.1 app is implemented and tested against the FTMS specification with a simulated bike. What the
+Rogue Echo Bike V3 actually sends (which fields, how often, how its console session behaves) still has
+to be confirmed on real hardware. If you own one, a packet capture from **Diagnostics → Download packet
+capture** is the most useful contribution right now.
+
+---
+
+## Getting Started
+
+### Requirements
+
+* A browser with Web Bluetooth: **Chrome or Edge** on Windows, macOS, Linux, ChromeOS or Android.
+  Safari and Firefox do not support Web Bluetooth; on iOS a Web Bluetooth browser such as Bluefy may work.
+* The page must be served over **HTTPS or from `localhost`** (a browser requirement for Bluetooth).
+* [Node.js](https://nodejs.org/) 20 or later for development.
+
+### Run it
+
+```bash
+npm install
+npm run dev        # http://localhost:5173
+```
+
+1. Turn on the Echo Bike console and make sure no other app (e.g. the Rogue app or Zwift) is connected to it.
+2. Click **Connect bike** and select the bike in the browser's chooser.
+3. Click **Start workout** and ride.
+4. **Finish** (tap twice) saves the workout locally and shows the summary.
+
+No bike at hand? **Use demo bike** runs the full app against a simulated air bike that sends real
+FTMS packets.
+
+### Build and test
+
+```bash
+npm test           # unit tests (parser, reassembly, recorder, storage)
+npm run typecheck
+npm run build      # static files in dist/, host them on any HTTPS static host
+```
+
+### Your data
+
+Workouts are stored only in your browser (IndexedDB). Each workout can be exported as JSON or CSV,
+and the history page exports everything as one JSON file. The JSON format is documented in
+[`src/recorder/workout.ts`](src/recorder/workout.ts): a summary plus one sample per bike notification
+(active time, power, cadence, speed, heart rate, cumulative distance and calories).
+
+A workout in progress is saved as a draft every 15 seconds. If the browser closes during a ride, the
+app offers to save the unfinished workout on the next start.
 
 ---
 
