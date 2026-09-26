@@ -23,8 +23,9 @@ the Origin Private File System). The design must allow switching to a real datab
 * All database access runs in a dedicated worker; the UI thread never blocks on storage.
 * Package `@sqlite.org/sqlite-wasm` (Apache-2.0, no dependencies; SQLite itself is public
   domain) is an infrastructure dependency, isolated behind the repository interfaces.
-* Assumption: the `opfs-sahpool` VFS works without cross-origin isolation headers in current
-  Chrome/Edge; the `opfs` VFS would need COOP/COEP headers. To be verified in the first step.
+* Verified by spike 1 ([research/spike-sqlite-opfs.md](research/spike-sqlite-opfs.md)): the
+  `opfs-sahpool` VFS works without cross-origin isolation headers, in dev and production builds.
+  Only one tab can own the database at a time; the app must enforce and explain that.
 * A browser page cannot talk to a SQL server directly; the server option therefore implies a
   small backend later. Not needed now.
 
