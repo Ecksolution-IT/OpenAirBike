@@ -62,10 +62,10 @@ describe('simulated transport → FTMS adapter → canonical telemetry → recor
     recorder.start(0);
     stream.on('sample', (s) => recorder.addSample(s));
     for (let i = 0; i < 60; i++) transport.step();
-    const w = recorder.stop();
-    expect(w.samples.length).toBe(60);
-    expect(w.summary.maxPowerW!).toBeGreaterThan(w.summary.avgPowerW!);
-    expect(w.summary.distanceM).toBeGreaterThan(0);
+    const { summary } = recorder.stop();
+    expect(recorder.sampleCount).toBe(60);
+    expect(summary.maxPowerW!).toBeGreaterThan(summary.avgPowerW!);
+    expect(summary.distanceM).toBeGreaterThan(0);
   });
 
   it('feeds the conformance checks from the live data', async () => {

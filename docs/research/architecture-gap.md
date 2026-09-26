@@ -8,7 +8,9 @@ device but must not become the centre of the domain.
 First technical goal: Echo Bike V3 → BLE → FTMS → Canonical Telemetry → Recording → **SQLite**
 → minimal live display.
 
-This page is analysis only. Nothing here is implemented yet.
+This page is the analysis that led to the plan. The target layering has since been implemented
+(plan steps 2–10, see [../plan-first-technical-goal.md](../plan-first-technical-goal.md) and the
+layer table in the README); the tables below describe the state before that.
 
 ## Where the v0.1 code stood (before plan steps 2–5)
 

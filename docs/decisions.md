@@ -55,6 +55,11 @@ values need no conversion between recording and display:
 defaulting to `de-DE` (decimal comma). Storage stays locale-independent. Imperial units are not
 supported.
 
+Implemented in plan step 9: `src/ui/format.ts` (Intl, no thousands separators so training
+numbers stay short, distances below 1 km in metres) and `src/ui/i18n.ts` (German texts by
+default, English when the browser prefers English; the same keys in both, enforced by a test).
+Diagnostic details (log, conformance) stay in English.
+
 ## D3 — Reference projects: adopt what is allowed, depend on nothing (2026-09-26)
 
 **Decision.** OpenAirBike does not take runtime dependencies on reference projects. Content may
@@ -78,3 +83,6 @@ experimental).
 **Consequences.** The IndexedDB code and its crash-recovery draft are replaced by the SQLite
 implementation. Crash recovery is kept as a feature, implemented by writing samples to SQLite
 while recording.
+
+Done in plan step 8: `SessionRecording` writes samples and events every 5 s; `recoverSession`
+finishes interrupted sessions from the saved samples (status `recovered`).

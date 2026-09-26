@@ -1,6 +1,6 @@
 import type { App } from '../app/app';
 import { h, navigate, setText, type View } from './dom';
-import { formatDuration, formatKm, formatNumber } from './format';
+import { fmt, t } from './i18n';
 
 const FINISH_CONFIRM_MS = 3000;
 
@@ -20,13 +20,13 @@ export function liveView(app: App): View {
       return { value, el: h('div', { class: `metric ${cls}` }, value, h('span', { class: 'label' }, label)) };
     };
 
-    const power = metric('W', 'hero');
-    const cadence = metric('RPM');
-    const second = metric('BPM');
-    const time = metric('TIME');
-    const distance = metric('KM');
-    const energy = metric('KCAL');
-    const speed = metric('KM/H');
+    const power = metric(t.unit.power, 'hero');
+    const cadence = metric(t.unit.cadence);
+    const second = metric(t.unit.heartRate);
+    const time = metric(t.unit.time);
+    const distance = metric(t.unit.km);
+    const energy = metric(t.unit.energy);
+    const speed = metric(t.unit.speed);
 
     const connection = h('span', { class: 'connection' });
     const badge = h('span', { class: 'badge' });
@@ -47,17 +47,17 @@ export function liveView(app: App): View {
       }
       finishButton.disabled = true;
       try {
-        const workout = await app.finishWorkout();
-        navigate(`#/workout/${workout.id}`);
+        const id = await app.finishWorkout();
+        navigate(`#/workout/${id}`);
       } catch (err) {
-        error.textContent = `Saving failed: ${err instanceof Error ? err.message : String(err)}`;
+        error.textContent = t.savingFailed(err instanceof Error ? err.message : String(err));
         error.hidden = false;
       }
     } });
 
     root.append(
       h('div', { class: 'live' },
-        h('div', { class: 'live-top' }, h('span', { class: 'brand' }, 'OPENAIRBIKE'), badge, connection),
+        h('div', { class: 'live-top' }, h('span', { class: 'brand' }, t.appTitle), badge, connection),
         h('div', { class: 'metrics' },
           power.el,
           h('div', { class: 'metric-row' }, cadence.el, second.el),
@@ -78,31 +78,33 @@ export function liveView(app: App): View {
       if (s?.heartRateBpm !== undefined) heartRateSeen = true;
       if (app.bikeInfo?.capabilities?.includes('heartRate')) heartRateSeen = true;
 
-      setText(power.value, formatNumber(s?.powerW));
-      setText(cadence.value, formatNumber(s?.cadenceRpm));
+      setText(power.value, fmt.number(s?.powerW));
+      setText(cadence.value, fmt.number(s?.cadenceRpm));
       speed.el.hidden = !heartRateSeen;
       if (heartRateSeen) {
-        setText(second.value, formatNumber(s?.heartRateBpm));
-        setText(second.el.lastElementChild!, 'BPM');
-        setText(speed.value, formatNumber(s?.speedKmh, 1));
+        setText(second.value, fmt.number(s?.heartRateBpm));
+        setText(second.el.lastElementChild!, t.unit.heartRate);
+        setText(speed.value, fmt.number(s?.speedKmh, 1));
       } else {
-        setText(second.value, formatNumber(s?.speedKmh, 1));
-        setText(second.el.lastElementChild!, 'KM/H');
+        setText(second.value, fmt.number(s?.speedKmh, 1));
+        setText(second.el.lastElementChild!, t.unit.speed);
       }
-      setText(time.value, formatDuration(recorder.elapsedS(now)));
-      setText(distance.value, formatKm(recorder.distanceM));
-      setText(energy.value, formatNumber(recorder.energyKcal));
+      setText(time.value, fmt.duration(recorder.elapsedS(now)));
+      const d = fmt.distance(recorder.distanceM);
+      setText(distance.value, d.value);
+      setText(distance.el.lastElementChild!, d.unit === 'm' ? t.unit.m : t.unit.km);
+      setText(energy.value, fmt.number(recorder.energyKcal));
 
       const state = app.connectionState;
-      setText(connection, state === 'connected' ? (s ? '● LIVE' : '● WAITING FOR DATA') : `● ${state.toUpperCase()}`);
+      setText(connection, `● ${state === 'connected' && !s ? t.waitingForData : t.liveState[state]}`);
       connection.className = `connection ${state === 'connected' && s ? 'ok' : 'warn'}`;
 
       const paused = recorder.state === 'paused';
-      setText(badge, paused ? 'PAUSED' : '');
+      setText(badge, paused ? t.paused : '');
       badge.hidden = !paused;
       root.classList.toggle('paused', paused);
-      setText(pauseButton, paused ? 'Resume' : 'Pause');
-      setText(finishButton, now < confirmUntil ? 'Tap again to finish' : 'Finish');
+      setText(pauseButton, paused ? t.resume : t.pause);
+      setText(finishButton, now < confirmUntil ? t.tapAgainToFinish : t.finish);
     };
 
     update();

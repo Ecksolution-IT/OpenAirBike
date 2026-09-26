@@ -1,7 +1,8 @@
 import './ui/style.css';
 import { App } from './app/app';
-import { WorkoutStore } from './persistence/indexeddb/workoutStore';
+import { DatabaseLockedError, openSqliteStore, type SqliteStore } from './persistence/sqlite/client';
 import { h, type View } from './ui/dom';
+import { i18n, t } from './ui/i18n';
 import { historyView, workoutView } from './ui/historyView';
 import { homeView } from './ui/homeView';
 import { liveView } from './ui/liveView';
@@ -17,15 +18,17 @@ function route(app: App): View {
 
 async function main() {
   const root = document.getElementById('app')!;
-  let store: WorkoutStore;
+  document.documentElement.lang = i18n.language;
+  let store: SqliteStore;
   try {
-    store = await WorkoutStore.open();
+    store = await openSqliteStore();
   } catch (err) {
-    root.append(h('p', { class: 'error' }, `Local storage is unavailable: ${String(err)}`));
+    const message = err instanceof DatabaseLockedError ? t.databaseLocked : t.storageUnavailable(err instanceof Error ? err.message : String(err));
+    root.append(h('header', { class: 'title' }, h('h1', {}, t.appTitle)), h('p', { class: 'card error' }, message));
     return;
   }
 
-  const app = new App(store);
+  const app = new App(store.repositories, store);
   await app.init();
 
   // Leaving the page mid-workout would lose the last seconds; the browser asks first.
