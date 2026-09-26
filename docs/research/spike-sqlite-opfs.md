@@ -3,8 +3,8 @@
 Plan step 1 of [../plan-first-technical-goal.md](../plan-first-technical-goal.md). Question: can
 decision D1 (SQLite in the browser, nothing extra installed) be built as intended?
 
-Code: [`spikes/sqlite-opfs/`](../../spikes/sqlite-opfs/) — a throw-away page, not part of the app
-build. Run it with `npm run dev` and open <http://localhost:5173/spikes/sqlite-opfs/>.
+The throw-away spike page (`spikes/sqlite-opfs/`) was removed in plan step 10, after the real
+implementation (`src/persistence/sqlite/`) had replaced it; it remains in the git history.
 
 ## Setup
 
