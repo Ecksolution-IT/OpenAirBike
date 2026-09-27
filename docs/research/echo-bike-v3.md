@@ -1,7 +1,10 @@
 # Rogue Echo Bike V3 — what we know
 
 Legend: **verified** = checked against hardware or a primary source · **reported** = a reference
-project states it · **assumption** = our inference, to be checked.
+project states it · **assumption** = our inference, to be checked. In the hardware-capability terms
+used since First Ride: verified by a standard = **Specified**, by our own test = **Observed**;
+reported and assumption = **Inferred**. The user-facing guide is
+[../devices/rogue-echo-bike-v3.md](../devices/rogue-echo-bike-v3.md).
 
 No OpenAirBike packet capture from a real Echo Bike V3 exists yet (status 2026-09-27). Everything
 below that is not marked verified must be confirmed with one — use the hardware-proof tool and its

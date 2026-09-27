@@ -63,6 +63,9 @@ Details: [docs/architecture/adr/](docs/architecture/adr/README.md) and D1–D4 i
   workout engine · recording/analytics · persistence · application · UI.
 * The Echo Bike is the first target, never the centre of the domain.
 * Mark assumptions as assumptions (verified / reported / assumption).
+* Hardware capabilities are **Specified** (standard/manufacturer), **Observed** (our own test on the
+  device) or **Inferred** (reference projects/behaviour) — never mixed. "Supported" only after our
+  own successful test; until then "Target", "Testing" or "Experimental".
 * The owner writes German — answer in German. Repository docs, code and commits are English.
 
 ## Where to find what
@@ -71,6 +74,8 @@ Details: [docs/architecture/adr/](docs/architecture/adr/README.md) and D1–D4 i
 | --- | --- |
 | MVP scope, Next/Later/Research, acceptance criteria | [docs/product/mvp.md](docs/product/mvp.md) |
 | Real-bike test guide, expected FTMS functions | [docs/testing/first-ride.md](docs/testing/first-ride.md) |
+| Echo Bike connection guide, troubleshooting, hardware matrix | [docs/devices/rogue-echo-bike-v3.md](docs/devices/rogue-echo-bike-v3.md) |
+| Hardware test protocol (fill in per test) | [docs/testing/rogue-echo-bike-v3-test.md](docs/testing/rogue-echo-bike-v3-test.md) |
 | Diagnose / hardware-proof tool | [docs/product/milestone-0-hardware-proof.md](docs/product/milestone-0-hardware-proof.md) |
 | Target architecture, dependency rules | [docs/architecture/architecture.md](docs/architecture/architecture.md) |
 | Telemetry and device model (design) | [docs/architecture/device-telemetry-model.md](docs/architecture/device-telemetry-model.md) |
