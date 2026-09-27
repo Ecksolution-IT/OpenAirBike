@@ -40,3 +40,6 @@ marked verified must be confirmed with one (Diagnostics → Download packet capt
 | R5 | Heart rate: none, via FTMS field, or via a separate HR service? | Live screen layout, optional HR sensor support | Capture with and without a paired strap |
 | R6 | Control Point present? If yes, does it accept Request Control / Start / Stop? | Candidate for v0.2 (sync console session with workouts) | Capture; later a guarded write test |
 | R7 | Firmware / model strings in Device Information Service | Device profile identification | Capture |
+
+Further questions R8–R13 (setup timing, Control Point responses, notification rate, session after
+disconnect, available services) and a capture routine: [ftms-ble-analysis.md](ftms-ble-analysis.md#7-open-questions-for-the-real-bike).
