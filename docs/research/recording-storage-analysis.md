@@ -112,17 +112,17 @@ No project contains a real Echo capture.
 adapter setup, reassembly, parser, conformance monitor, recorder and UI run unchanged. "Device"
 = replay transport + the profile the capture resolves to.
 
-**Capture format v1** (today's `captureReport()` is a good start but not replayable):
+**Capture format v1.** Two captures exist today; neither is the final replay format (S4):
 
-| Needed | Today |
-| --- | --- |
-| format id + version, app version | missing |
-| full service/characteristic UUIDs and properties (`GattLink.characteristics()`) | characteristic stored as display name only |
-| values of **reads** (Feature 0x2ACC, DIS, ranges) with time | only derived diagnostics, not the bytes |
-| notifications/indications with UUID, bytes, **relative monotonic time** since connect | wall-clock `Date.now()`, name instead of UUID |
-| connection events: connect, setup done, disconnect, reconnect | only in the free-text log |
-| optional app commands (start/pause/stop workout) to replay whole sessions | missing |
-| privacy: device id/name and user agent anonymisable | not handled |
+| Needed | App (`captureReport()`, Diagnostics) | Hardware-proof tool (`tools/hardware-proof/capture.ts`, draft `version: 0`) |
+| --- | --- | --- |
+| format id + version, app version | missing | format id + version; no app version |
+| full service/characteristic UUIDs and properties | display name only | ✅ full UUIDs; GATT inventory with properties (`GattLink.inventory()`) |
+| values of **reads** (Feature 0x2ACC, DIS, ranges) with time | only derived diagnostics | ✅ Feature and DIS reads as hex (no ranges) |
+| notifications/indications with UUID, bytes, relative time | wall clock, name instead of UUID | ✅ relative ms since connect (wall-clock based, not monotonic) |
+| connection events: connect, setup done, disconnect, reconnect | free-text log only | ✅ `events` (chosen, state, setup, error) |
+| optional app commands (start/pause/stop workout) | missing | missing (no sessions in the tool) |
+| privacy: no device id, no serial | not handled | ✅ no device id, serial never read; advertised name and user agent kept |
 
 **Behaviour.**
 * Injected clock; modes real-time, accelerated (× N) and step-wise (tests) — deterministic.

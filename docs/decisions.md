@@ -1,7 +1,7 @@
 # Decisions
 
-Short architecture decision records. Newest last. Each entry states what was decided, why, and
-what follows from it. Assumptions are marked as such.
+The first four short decision records (all still valid). Later decisions are full ADRs in
+[architecture/adr/](architecture/adr/README.md), which reference these.
 
 ## D1 — Persistence: SQLite in the browser, portable to a server database later (2026-09-26)
 

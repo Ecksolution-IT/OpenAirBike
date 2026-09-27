@@ -58,5 +58,5 @@ heart-rate sensors, server database, FIT export.
 
 ## Needs hardware
 
-Before or during step 3/4, a packet capture from a real Echo Bike V3 answers the open questions
-R1–R7 in [research/echo-bike-v3.md](research/echo-bike-v3.md) and fills the Echo profile.
+Still open. A capture from a real Echo Bike V3 answers R1–R13 and fills the Echo profile; the tool
+and test plan for it are Milestone 0 ([product/milestone-0-hardware-proof.md](product/milestone-0-hardware-proof.md)).

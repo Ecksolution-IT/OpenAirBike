@@ -32,9 +32,8 @@ Most relevant project for the protocol layer.
 * Also encodes Control Point requests and decodes responses and Machine Status (not needed
   for v0.1).
 
-Options (decision pending, see [architecture-gap.md](architecture-gap.md)):
-use as dependency, use only its vectors as test fixtures (MIT notice required), or keep our own
-parser and cross-check against the vectors.
+Decided (D3): not a dependency. Our own parser; its vectors are test fixtures with the MIT notice
+(`test/fixtures/third-party/deancochran-ftms/`, `test/vectors.test.ts`).
 
 ## Rogue_Echo_Bike_v3-main — Echo tracker (license unclear)
 
