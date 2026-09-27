@@ -14,6 +14,7 @@ examining a reference project or specification again.
 | [echo-bike-v3.md](echo-bike-v3.md) | What is known about the Rogue Echo Bike V3, separated into verified / reported / assumed |
 | [architecture-gap.md](architecture-gap.md) | Target layering vs. the v0.1 code (historical), the SQLite decision and schema sketch |
 | [spike-sqlite-opfs.md](spike-sqlite-opfs.md) | Spike 1: SQLite WASM in OPFS — results and consequences |
+| [../architecture/architecture.md](../architecture/architecture.md) | Minimal target architecture derived from this research: modules, dependency rules, data flow, events, capabilities, error boundaries, repo structure |
 | [../decisions.md](../decisions.md) | Architecture decisions D1–D4 |
 | [../plan-first-technical-goal.md](../plan-first-technical-goal.md) | Step plan for the first technical goal (steps 1–10 done) |
 | [../ftms-notes.md](../ftms-notes.md) | FTMS / FTMP / FTMS.TS / FTMS.ICS requirements and where the code implements them |
