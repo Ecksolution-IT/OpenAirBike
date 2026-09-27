@@ -7,7 +7,7 @@ import type { CharacteristicInfo, GattLink, GattNotification, GattServiceInvento
 import { propertyList } from '../src/transport/webBluetooth';
 import { uuid16 } from '../src/util/bleUuid';
 import { CaptureLog, MAX_CAPTURED_PACKETS } from '../tools/hardware-proof/capture';
-import { describeIndoorBikeData, describeTelemetry, PacketDecoder } from '../tools/hardware-proof/decoder';
+import { describeIndoorBikeData, describeLive, PacketDecoder } from '../tools/hardware-proof/decoder';
 import { probeDevice, type ProbeSink } from '../tools/hardware-proof/probe';
 
 interface FakeCharacteristic {
@@ -210,10 +210,23 @@ describe('describe helpers', () => {
     expect(describeIndoorBikeData({ moreData: false, instantaneousSpeedKmh: 10, heartRateBpm: 120 })).toBe('speed 10.00 km/h · HR 120 bpm');
   });
 
-  it('shows "–" for unavailable canonical metrics, never 0', () => {
-    expect(describeTelemetry({ at: 0, powerW: 0, deviceCounters: {} })).toBe(
-      'power 0 W · cadence – · speed – · HR – · device distance – · device energy – · device elapsed –',
-    );
+  it('shows each canonical metric as reported: a real 0 stays 0, a missing metric is "–"', () => {
+    const lines = describeLive({ at: 0, powerW: 0, cadenceRpm: 61.5, deviceCounters: { energyKcal: 12 } }, undefined);
+    expect(lines).toEqual([
+      'Power                        0 W',
+      'Cadence                      61.5 rpm',
+      'Speed                        –',
+      'Heart rate                   –',
+      'Distance (bike counter)      –',
+      'Energy (bike counter)        12 kcal',
+      'Elapsed time (bike counter)  –',
+    ]);
+  });
+
+  it('marks metrics the bike does not declare in its features', () => {
+    const lines = describeLive(undefined, ['speed', 'power', 'cadence']);
+    expect(lines[0]).toBe('Power                        –');
+    expect(lines[3]).toBe('Heart rate                   –  (not declared by the bike)');
   });
 });
 
