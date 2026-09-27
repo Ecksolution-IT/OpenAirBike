@@ -48,7 +48,7 @@ npm run diagnose        # opens http://localhost:5173/tools/hardware-proof/
 | 9 | Stop pedalling ~30 s, pedal again | note whether packets stop and whether counters continue |
 | 10 | Click **Download capture**, then **Disconnect** | Status `disconnected`; the console no longer shows a connection |
 
-Please report: chooser mode that found the bike, advertised name, Device Information, feature
+Record the result in [rogue-echo-bike-v3-test.md](rogue-echo-bike-v3-test.md). Please report: chooser mode that found the bike, advertised name, Device Information, feature
 line, which live metrics were non-empty, the record rate from "Status", any "Problems" or failing
 conformance lines, and the capture file (it contains no device id or serial number).
 
@@ -58,25 +58,26 @@ the console (R5); compare last distance/energy with the console display (W1, W2)
 
 ## Expected FTMS functions
 
-Status: **spec** = mandatory in FTMS v1.0.1 for an indoor bike · **reported** = a reference project
-says so · **assumption** = our inference. Everything here must be confirmed on the bike.
+Evidence (see [../devices/rogue-echo-bike-v3.md](../devices/rogue-echo-bike-v3.md#evidence-legend)):
+**Specified** = mandatory in FTMS v1.0.1 for an indoor bike · **Inferred** = reported by a reference
+project or assumed by us · **Observed** = none yet. Everything here must be observed on the bike.
 
-| Function | Expected | Status |
+| Function | Expected | Evidence |
 | --- | --- | --- |
-| Fitness Machine Service 0x1826 | present | reported (Echo tracker, garmin bridge) |
-| FTMS UUID in the advertisement | yes | assumption — both references keep a name fallback |
-| Advertised name contains "Echo" / "Rogue" | yes | assumption (R2) |
-| Fitness Machine Feature 0x2ACC | readable, 8 bytes | spec; not demonstrated for the Echo by any reference |
-| Indoor Bike Data 0x2AD2 notifications | ~1 per second | reported (data); rate is an assumption (R11) |
-| Instantaneous Speed | in every complete record | spec |
-| Cadence, Power | sent | reported (tracker shows them; whether they come from the bike is unconfirmed) |
-| Total Distance, Expended Energy, Elapsed Time | sent | assumption |
-| Heart Rate | unknown; `0` = no sensor | reported (bridge treats 0 as no sensor) (R5) |
-| Resistance Level | not sent (air bike) | assumption; field size disputed (R1) |
-| More Data (split records) | not used | assumption; handled if used |
-| Data only while pedalling | yes | reported (tracker README) |
+| Fitness Machine Service 0x1826 | present | Inferred (reported by the Echo tracker and garmin bridge) |
+| FTMS UUID in the advertisement | yes | Inferred (assumption; both references keep a name fallback) |
+| Advertised name contains "Echo" / "Rogue" | yes | Inferred (assumption, R2) |
+| Fitness Machine Feature 0x2ACC | readable, 8 bytes | Specified; not demonstrated for the Echo by any reference |
+| Indoor Bike Data 0x2AD2 notifications | ~1 per second | Inferred (data reported; rate assumed, R11) |
+| Instantaneous Speed | in every complete record | Specified |
+| Cadence, Power | sent | Inferred (tracker shows them; source unconfirmed) |
+| Total Distance, Expended Energy, Elapsed Time | sent | Inferred (assumption) |
+| Heart Rate | unknown; `0` = no sensor | Inferred (bridge treats 0 as no sensor, R5) |
+| Resistance Level | not sent (air bike) | Inferred (assumption); field size disputed (R1) |
+| More Data (split records) | not used | Inferred (assumption); handled if used |
+| Data only while pedalling | yes | Inferred (reported by the tracker README) |
 | Training Status 0x2AD3, Fitness Machine Status 0x2ADA | unknown | not demonstrated (R4) |
-| Control Point 0x2AD9 | unknown | tracker writes to it blindly; **not used here**, presence only (R6) |
+| Control Point 0x2AD9 | unknown | Inferred: tracker writes to it blindly; **not used here**, presence only (R6) |
 | Device Information (manufacturer, model, firmware) | unknown | not demonstrated (R7) |
 
 ## Known uncertainties

@@ -23,7 +23,9 @@ investigated twice. **Read these instead of re-opening `reference/`.** Overview 
   Echo tracker, bridge and toolkit have no licence file → facts and ideas only. Only `ftms` (MIT)
   is reused, as test vectors.
 * Mark statements as **verified** (primary source, code or hardware), **reported** (a reference
-  project says so) or **assumption**.
+  project says so) or **assumption**. For **hardware capabilities** use **Specified** (standard or
+  manufacturer), **Observed** (our own test on the device) and **Inferred** (reference projects or
+  behaviour, not confirmed by us) — never mixed.
 
 ## Status (2026-09-27)
 
