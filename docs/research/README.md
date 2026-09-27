@@ -5,6 +5,7 @@ examining a reference project or specification again.
 
 | File | Content |
 | --- | --- |
+| [feature-matrix.md](feature-matrix.md) | Consolidated feature matrix (OAB vs. five references, 17 categories, relevance MVP/Later/No) and differentiation candidates (benchmarks, benchmark engine, ghost mode, replay, sharing) |
 | [reference-inventory.md](reference-inventory.md) | High-level map per reference project: purpose, stack, license, structure, key files, what to investigate later |
 | [ftms-ble-analysis.md](ftms-ble-analysis.md) | BLE/FTMS implementations compared: cleanest approach, Rogue specifics, core vs. Echo adapter, reusable MIT parts, open questions R8–R13 |
 | [workout-engine-analysis.md](workout-engine-analysis.md) | Workout systems compared (ewoc concepts, Echo tracker): feature matrix, good/problematic ideas, requirements WE-1–WE-14, first engine scope, open questions W1–W5 |
@@ -13,6 +14,7 @@ examining a reference project or specification again.
 | [echo-bike-v3.md](echo-bike-v3.md) | What is known about the Rogue Echo Bike V3, separated into verified / reported / assumed |
 | [architecture-gap.md](architecture-gap.md) | Target layering vs. the v0.1 code (historical), the SQLite decision and schema sketch |
 | [spike-sqlite-opfs.md](spike-sqlite-opfs.md) | Spike 1: SQLite WASM in OPFS — results and consequences |
+| [../architecture/architecture.md](../architecture/architecture.md) | Minimal target architecture derived from this research: modules, dependency rules, data flow, events, capabilities, error boundaries, repo structure |
 | [../decisions.md](../decisions.md) | Architecture decisions D1–D4 |
 | [../plan-first-technical-goal.md](../plan-first-technical-goal.md) | Step plan for the first technical goal (steps 1–10 done) |
 | [../ftms-notes.md](../ftms-notes.md) | FTMS / FTMP / FTMS.TS / FTMS.ICS requirements and where the code implements them |
