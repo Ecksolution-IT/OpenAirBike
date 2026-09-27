@@ -1,4 +1,5 @@
 import { toCanonical } from '../../src/adapters/ftms-indoor-bike/canonical';
+import type { Capability } from '../../src/adapters/types';
 import { toHex } from '../../src/protocol/ftms/bytes';
 import { ConformanceMonitor, type ConformanceCheck } from '../../src/protocol/ftms/conformance';
 import { DataRecordAssembler, type IndoorBikeRecord } from '../../src/protocol/ftms/dataRecord';
@@ -52,18 +53,28 @@ export function describeIndoorBikeData(d: IndoorBikeData): string {
     .join(' · ');
 }
 
-/** Canonical telemetry as the app would see it; "–" marks a metric that is not available. */
-export function describeTelemetry(s: TelemetrySample): string {
-  const v = (x: number | undefined, unit: string, digits = 0) => (x === undefined ? '–' : `${x.toFixed(digits)} ${unit}`);
-  return [
-    `power ${v(s.powerW, 'W')}`,
-    `cadence ${v(s.cadenceRpm, 'rpm', 1)}`,
-    `speed ${v(s.speedKmh, 'km/h', 1)}`,
-    `HR ${v(s.heartRateBpm, 'bpm')}`,
-    `device distance ${v(s.deviceCounters.distanceM, 'm')}`,
-    `device energy ${v(s.deviceCounters.energyKcal, 'kcal')}`,
-    `device elapsed ${v(s.deviceCounters.elapsedS, 's')}`,
-  ].join(' · ');
+const LIVE_METRICS: [label: string, capability: Capability, unit: string, digits: number, value: (s: TelemetrySample) => number | undefined][] = [
+  ['Power', 'power', 'W', 0, (s) => s.powerW],
+  ['Cadence', 'cadence', 'rpm', 1, (s) => s.cadenceRpm],
+  ['Speed', 'speed', 'km/h', 1, (s) => s.speedKmh],
+  ['Heart rate', 'heartRate', 'bpm', 0, (s) => s.heartRateBpm],
+  ['Distance (bike counter)', 'distance', 'm', 0, (s) => s.deviceCounters.distanceM],
+  ['Energy (bike counter)', 'energy', 'kcal', 0, (s) => s.deviceCounters.energyKcal],
+  ['Elapsed time (bike counter)', 'elapsedTime', 's', 0, (s) => s.deviceCounters.elapsedS],
+];
+
+/**
+ * Canonical telemetry, one metric per line, exactly as the bike reported it: "–" when the last
+ * record did not contain the metric (nothing is estimated or computed), and a note when the bike's
+ * Fitness Machine Feature does not declare it at all.
+ */
+export function describeLive(sample: TelemetrySample | undefined, declared: Capability[] | undefined): string[] {
+  return LIVE_METRICS.map(([label, capability, unit, digits, value]) => {
+    const v = sample && value(sample);
+    const shown = v === undefined ? '–' : `${v.toFixed(digits)} ${unit}`;
+    const note = declared && !declared.includes(capability) ? '  (not declared by the bike)' : '';
+    return `${label.padEnd(28)} ${shown}${note}`;
+  });
 }
 
 /**

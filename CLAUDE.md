@@ -8,9 +8,10 @@ A static TypeScript web app (Web Bluetooth + SQLite WASM in the browser). Apache
 * **v0.1 "Ride" is code-complete** (find → connect → live data → record → SQLite → summary →
   history) and verified with the simulated bike and in headless Chromium. **Not yet run on a real
   Echo Bike V3.** MVP acceptance criteria: [docs/product/mvp.md](docs/product/mvp.md).
-* **Milestone 0 (hardware proof) tool exists:** `tools/hardware-proof/` (`npm run dev:hardware`).
-  Next step: run its test plan on the real bike, commit an anonymised capture, answer R1–R13 and
-  update the Echo profile — [docs/product/milestone-0-hardware-proof.md](docs/product/milestone-0-hardware-proof.md).
+* **Milestones 0 (hardware proof) and v0.0.1 "First Ride" are implemented** as the developer tool
+  `tools/hardware-proof/` (`npm run diagnose`: live canonical telemetry + optional debug details).
+  Next step: run [docs/testing/first-ride.md](docs/testing/first-ride.md) on the real bike, commit an
+  anonymised capture, answer R1–R13 and update the Echo profile.
 * Designed but **not implemented**: workout engine, telemetry/device model changes, replay device,
   module renames. Nothing is implemented without an explicit request.
 
@@ -19,7 +20,7 @@ A static TypeScript web app (Web Bluetooth + SQLite WASM in the browser). Apache
 ```text
 npm install
 npm run dev            # app (Chrome/Edge; Web Bluetooth needs HTTPS or localhost)
-npm run dev:hardware   # hardware-proof tool
+npm run diagnose       # developer tool: scan, connect, live telemetry, debug details
 npm run typecheck && npm test && npm run build    # CI runs exactly these
 ```
 
@@ -34,7 +35,7 @@ src/domain/           Session, Sample, SessionEvent, Summary, repository interfa
 src/recording/        counter deltas, pause/resume, 5 s batched flush, crash recovery, summary
 src/persistence/      memory/ and sqlite/ (worker, OPFS sahpool, Web Lock, portable SQL migrations), export
 src/app/ · src/ui/    use cases; plain-DOM UI, i18n (German default, English), Intl formatting
-tools/hardware-proof/ Milestone 0 developer page (probe, decoder, capture)
+tools/hardware-proof/ developer page "diagnose" (probe, decoder, live view, capture)
 test/                 vitest; FTMS vectors from @deancochran/ftms (MIT) in test/fixtures/third-party/
 ```
 
@@ -69,7 +70,8 @@ Details: [docs/architecture/adr/](docs/architecture/adr/README.md) and D1–D4 i
 | Topic | Doc |
 | --- | --- |
 | MVP scope, Next/Later/Research, acceptance criteria | [docs/product/mvp.md](docs/product/mvp.md) |
-| Hardware proof tool and real-bike test plan | [docs/product/milestone-0-hardware-proof.md](docs/product/milestone-0-hardware-proof.md) |
+| Real-bike test guide, expected FTMS functions | [docs/testing/first-ride.md](docs/testing/first-ride.md) |
+| Diagnose / hardware-proof tool | [docs/product/milestone-0-hardware-proof.md](docs/product/milestone-0-hardware-proof.md) |
 | Target architecture, dependency rules | [docs/architecture/architecture.md](docs/architecture/architecture.md) |
 | Telemetry and device model (design) | [docs/architecture/device-telemetry-model.md](docs/architecture/device-telemetry-model.md) |
 | Workout engine (design, MVP/Later) | [docs/architecture/workout-engine.md](docs/architecture/workout-engine.md) |

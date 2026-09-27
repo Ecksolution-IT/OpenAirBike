@@ -463,7 +463,7 @@ The v0.1 app is implemented and tested against the FTMS specification with a sim
 Rogue Echo Bike V3 actually sends (which fields, how often, how its console session behaves) still has
 to be confirmed on real hardware. If you own one, a packet capture from **Diagnose → Paketmitschnitt herunterladen** (Diagnostics → Download packet
 capture) is the most useful contribution right now. For a deeper look (all GATT services, features,
-per-packet decoding) use the hardware-proof developer tool: `npm run dev:hardware`, see
+per-packet decoding) use the hardware-proof developer tool: `npm run diagnose`, see
 [docs/product/milestone-0-hardware-proof.md](docs/product/milestone-0-hardware-proof.md).
 
 ---

@@ -12,7 +12,7 @@ state, English (diagnostics language, D2).
 
 ```text
 npm install
-npm run dev:hardware        # opens http://localhost:5173/tools/hardware-proof/
+npm run diagnose            # opens http://localhost:5173/tools/hardware-proof/
 ```
 
 Also part of `npm run build` (`dist/tools/hardware-proof/index.html`). Needs Chrome or Edge with
@@ -27,7 +27,8 @@ Web Bluetooth (desktop or Android), over HTTPS or localhost.
 | 5 FTMS features | reads Fitness Machine Feature (0x2ACC), shows raw bits and names | `tools/hardware-proof/probe.ts` |
 | 6 Subscribe | Indoor Bike Data, plus Training Status, Fitness Machine Status and Feature indications if present | `probe.ts` |
 | 7 Raw packets (optional) | checkbox: hex in the log and packets in the capture file; download as JSON (draft capture format, `version: 0`) | `tools/hardware-proof/capture.ts` |
-| 8 Decoded telemetry | one line per packet (flags, fields, More Data, truncation, RFU bits), the canonical sample per complete record, record rate, FTMS conformance report | `tools/hardware-proof/decoder.ts` |
+| 8 Decoded telemetry | **Live view** (always): canonical metrics one per line, "–" when not sent, "not declared" when the Feature lacks it. **Debug details** (toggle): GATT list, feature flags, packet log with raw hex and decoded FTMS fields (More Data, truncation, RFU bits), record rate, conformance report | `tools/hardware-proof/decoder.ts` |
+| 10 Disconnect | button, and automatically when the page is closed or reloaded (`pagehide`) | `tools/hardware-proof/main.ts` |
 | 9 Separation | transport knows GATT only; the probe uses the `GattLink` port; decoding is pure protocol code | `src/transport` ↔ `src/protocol/ftms` |
 
 The probe never throws on a non-standard device: missing FTMS, a missing Indoor Bike Data
@@ -37,7 +38,7 @@ capture contains no device id.
 
 ## What works (verified without hardware)
 
-* `npm run typecheck`, `npm test` (153 tests, 23 new) and `npm run build` pass.
+* `npm run typecheck`, `npm test` (160 tests) and `npm run build` pass.
 * Unit tests cover:
   * the probe against fake GATT links: setup order, missing FTMS, missing IBD, short Feature,
     failed subscriptions, failed discovery, no serial read;
@@ -52,20 +53,8 @@ capture contains no device id.
 
 ## To test on the real bike
 
-Run in this order and download a capture after each; commit one anonymised capture as a fixture
-(AC-16).
-
-| # | Action | Answers |
-| --- | --- | --- |
-| 1 | Pairing mode on the console; **Scan: FTMS service** | does the Echo advertise the FTMS UUID (R2)? If it is missing here, try **Echo / Rogue names**, then **all devices** |
-| 2 | Note the advertised name and Device Information | name prefixes and profile matcher (R2, R7) |
-| 3 | Look at the GATT list | FTMS characteristics, Control Point, HR / Battery / other services (R6, R13) |
-| 4 | Look at the features | which metrics the Echo declares (R3) |
-| 5 | Idle 10 s, then ride 60 s with a sprint | data only while moving? record rate, More Data, field set, Resistance Level flag (R1, R9, R11, W4) |
-| 6 | Stop pedalling 90 s, ride 30 s | counters and Machine Status on stop (R4, W5) |
-| 7 | Move out of range / power-cycle mid-ride, reconnect | reconnect time; do counters continue (R12)? |
-| 8 | Wear a HR strap paired to the console, if available | HR in Indoor Bike Data or separate service (R5) |
-| 9 | Compare the last distance / energy with the console display | W1, W2 |
+Step-by-step guide, expected FTMS functions and what must be confirmed:
+[../testing/first-ride.md](../testing/first-ride.md).
 
 ## Known uncertainties and limits
 

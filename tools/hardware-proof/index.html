@@ -3,23 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpenAirBike · Hardware proof</title>
+    <title>OpenAirBike · Diagnose</title>
     <link rel="icon" href="../../icon.svg" type="image/svg+xml" />
     <style>
       body { font-family: system-ui, sans-serif; margin: 1rem; max-width: 70rem; }
       h1 { font-size: 1.3rem; }
       h2 { font-size: 1rem; margin: 1.2rem 0 0.3rem; }
       button { margin: 0 0.4rem 0.4rem 0; padding: 0.4rem 0.8rem; }
+      label { margin-right: 1rem; }
       pre { background: #f4f4f4; padding: 0.6rem; overflow-x: auto; font-size: 0.8rem; margin: 0; white-space: pre-wrap; }
+      #live { font-size: 1.1rem; }
       #log { max-height: 24rem; overflow-y: auto; }
       .warn { color: #a00; }
+      body:not(.debug) .debug { display: none; }
     </style>
   </head>
-  <body>
-    <h1>OpenAirBike · Hardware proof (Milestone 0)</h1>
+  <body class="debug">
+    <h1>OpenAirBike · Diagnose (First Ride)</h1>
     <p>
-      Developer tool: find an FTMS bike, list its GATT services, read its features and decode Indoor Bike Data.
-      Chrome or Edge with Web Bluetooth; nothing is stored. See <code>docs/product/milestone-0-hardware-proof.md</code>.
+      Developer tool: find an FTMS bike, connect, read its features and show live telemetry. Chrome or Edge with Web
+      Bluetooth; nothing is stored. Test guide: <code>docs/testing/first-ride.md</code>.
     </p>
     <p id="unsupported" class="warn" hidden>This browser has no Web Bluetooth. Use Chrome or Edge (desktop or Android) over HTTPS or localhost.</p>
 
@@ -28,24 +31,28 @@
       <button id="scan-names" title="Only devices whose name starts with a known profile prefix (Echo, Rogue)">Scan: Echo / Rogue names</button>
       <button id="scan-all" title="Every nearby device">Scan: all devices</button>
       <button id="disconnect" disabled>Disconnect</button>
-      <label><input type="checkbox" id="raw" checked /> Log raw packets (hex, kept in capture)</label>
-      <button id="download" disabled>Download capture</button>
+    </div>
+    <div>
+      <label><input type="checkbox" id="debug" checked /> Debug details</label>
+      <label class="debug"><input type="checkbox" id="raw" checked /> Raw packets (hex, kept in capture)</label>
+      <button id="download" class="debug" disabled>Download capture</button>
     </div>
 
     <h2>Status</h2>
     <pre id="status">Not connected.</pre>
     <h2>Device and profile</h2>
     <pre id="device">–</pre>
-    <h2>GATT services and characteristics</h2>
-    <pre id="gatt">–</pre>
-    <h2>FTMS features</h2>
-    <pre id="features">–</pre>
-    <h2>Telemetry (last complete Indoor Bike Data record, canonical units)</h2>
-    <pre id="telemetry">–</pre>
-    <h2>Packet log</h2>
-    <pre id="log"></pre>
-    <h2>FTMS conformance</h2>
-    <pre id="conformance">–</pre>
+    <h2>Live telemetry (canonical, as reported by the bike)</h2>
+    <pre id="live">–</pre>
+
+    <h2 class="debug">GATT services and characteristics</h2>
+    <pre id="gatt" class="debug">–</pre>
+    <h2 class="debug">FTMS features</h2>
+    <pre id="features" class="debug">–</pre>
+    <h2 class="debug">Packet log (raw hex and decoded FTMS data)</h2>
+    <pre id="log" class="debug"></pre>
+    <h2 class="debug">FTMS conformance</h2>
+    <pre id="conformance" class="debug">–</pre>
 
     <script type="module" src="./main.ts"></script>
   </body>

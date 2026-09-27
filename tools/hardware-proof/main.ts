@@ -1,13 +1,17 @@
 /**
- * Hardware proof (Milestone 0): composition root of the developer tool. Wires the Web Bluetooth
- * transport to the probe and the FTMS decoder and renders plain text. No storage, no app state.
+ * Diagnose / hardware proof (Milestones 0 and "First Ride"): composition root of the developer
+ * tool. Wires the Web Bluetooth transport to the probe and the FTMS decoder and renders plain
+ * text. The live view shows canonical telemetry only; FTMS details appear in debug mode.
+ * No storage, no app state.
  */
+import { capabilitiesFromFeatures } from '../../src/adapters/ftms-indoor-bike/canonical';
 import { PROFILES, resolveProfile, type DeviceProfile } from '../../src/adapters/profiles';
 import { FTMS_SERVICE, uuidName } from '../../src/protocol/ftms/uuids';
+import type { TelemetrySample } from '../../src/telemetry/types';
 import type { ConnectionState, GattNotification } from '../../src/transport/types';
 import { isWebBluetoothAvailable, requestAnyDevice, requestDevice, WebBluetoothTransport } from '../../src/transport/webBluetooth';
 import { CaptureLog, type ChooserMode } from './capture';
-import { describeTelemetry, PacketDecoder } from './decoder';
+import { describeLive, PacketDecoder } from './decoder';
 import { PROBE_SERVICES, probeDevice, type ProbeReport } from './probe';
 
 const MAX_LOG_LINES = 300;
@@ -22,6 +26,7 @@ let transport: WebBluetoothTransport | undefined;
 let capture: CaptureLog | undefined;
 let decoder = new PacketDecoder();
 let report: ProbeReport | undefined;
+let lastSample: TelemetrySample | undefined;
 let profile: DeviceProfile | undefined;
 let chooser: ChooserMode = 'ftms';
 let deviceName: string | undefined;
@@ -80,6 +85,12 @@ function renderProbe() {
     : 'Not read.';
 }
 
+function renderLive() {
+  const declared = report?.features && capabilitiesFromFeatures(report.features);
+  const header = lastSample ? `Last record ${clock(lastSample.at)}` : 'No complete Indoor Bike Data record yet — start pedalling.';
+  el('live').textContent = [header, '', ...describeLive(lastSample, declared)].join('\n');
+}
+
 function renderConformance() {
   el('conformance').textContent = decoder
     .conformanceReport()
@@ -96,7 +107,8 @@ function onNotification(n: GattNotification) {
     recordCount++;
     records.push(n.receivedAt);
     if (records.length > RATE_WINDOW) records = records.slice(-RATE_WINDOW);
-    el('telemetry').textContent = `${clock(n.receivedAt)}  ${describeTelemetry(d.telemetry)}`;
+    lastSample = d.telemetry;
+    renderLive();
     renderConformance();
   }
   renderStatus();
@@ -122,6 +134,7 @@ async function scan(mode: ChooserMode) {
   chooser = mode;
   deviceName = device.name ?? undefined;
   report = undefined;
+  lastSample = undefined;
   profile = undefined;
   packets = 0;
   recordCount = 0;
@@ -157,6 +170,7 @@ async function scan(mode: ChooserMode) {
       cap.setProbe(r, { id: profile.id, name: profile.displayName });
       cap.event(Date.now(), 'setup', `${r.subscribed.length} subscription(s), ${r.problems.length} problem(s)`);
       renderProbe();
+      renderLive();
       renderConformance();
     });
   } catch (err) {
@@ -185,6 +199,10 @@ button('scan-names').onclick = () => void scan('names');
 button('scan-all').onclick = () => void scan('all');
 button('disconnect').onclick = () => void transport?.disconnect();
 button('download').onclick = download;
+const debug = document.getElementById('debug') as HTMLInputElement;
+debug.onchange = () => document.body.classList.toggle('debug', debug.checked);
+// Release the bike when the page goes away, so the console or another app can connect.
+window.addEventListener('pagehide', () => void transport?.disconnect());
 raw.onchange = () => {
   if (capture) capture.recordPackets = raw.checked;
 };
