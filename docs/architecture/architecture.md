@@ -218,6 +218,8 @@ app, ui). Not one package per module.
 
 * [device-telemetry-model.md](device-telemetry-model.md) — canonical telemetry, device model,
   capabilities and the `FitnessDevice` / `TelemetrySource` / simulated / replay interfaces.
+* [workout-engine.md](workout-engine.md) — workout definition, conditions, state machine, events,
+  validation; MVP vs. later.
 
 ## Open points
 
