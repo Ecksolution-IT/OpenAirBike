@@ -214,6 +214,10 @@ Then exactly two: `packages/core` (shared, protocol, device without Web Bluetoot
 workout, recording, analytics, integrations) and `apps/web` (Web Bluetooth transport, SQLite WASM,
 app, ui). Not one package per module.
 
+## Decisions
+
+Accepted decisions are recorded as ADRs in [adr/](adr/README.md) (0001–0008).
+
 ## Detailed designs
 
 * [device-telemetry-model.md](device-telemetry-model.md) — canonical telemetry, device model,
