@@ -5,6 +5,7 @@ examining a reference project or specification again.
 
 | File | Content |
 | --- | --- |
+| [feature-matrix.md](feature-matrix.md) | Consolidated feature matrix (OAB vs. five references, 17 categories, relevance MVP/Later/No) and differentiation candidates (benchmarks, benchmark engine, ghost mode, replay, sharing) |
 | [reference-inventory.md](reference-inventory.md) | High-level map per reference project: purpose, stack, license, structure, key files, what to investigate later |
 | [ftms-ble-analysis.md](ftms-ble-analysis.md) | BLE/FTMS implementations compared: cleanest approach, Rogue specifics, core vs. Echo adapter, reusable MIT parts, open questions R8–R13 |
 | [workout-engine-analysis.md](workout-engine-analysis.md) | Workout systems compared (ewoc concepts, Echo tracker): feature matrix, good/problematic ideas, requirements WE-1–WE-14, first engine scope, open questions W1–W5 |
