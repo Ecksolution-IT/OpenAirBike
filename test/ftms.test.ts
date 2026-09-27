@@ -52,6 +52,22 @@ describe('parseFitnessMachineFeature', () => {
     const f = parseFitnessMachineFeature(fromHex('00 00 00 00 08 20 01 00'));
     expect(f.targetSettingFeatures).toEqual(['Power Target Setting', 'Indoor Bike Simulation Parameters', 'Targeted Cadence Configuration']);
   });
+
+  it('reads machine features from a value without the target setting half', () => {
+    const f = parseFitnessMachineFeature(fromHex('06 52 00 00'));
+    expect(f.machineFeatures).toContain('Power Measurement');
+    expect(f).toMatchObject({ rawTargetSettingFeatures: 0, targetSettingFeatures: [] });
+  });
+
+  it('returns no features for an empty value instead of throwing', () => {
+    expect(parseFitnessMachineFeature(new Uint8Array(0))).toMatchObject({ machineFeatures: [], rawMachineFeatures: 0 });
+  });
+
+  it('ignores reserved feature bits (17–31)', () => {
+    const f = parseFitnessMachineFeature(fromHex('02 00 fe ff 00 00 00 00'));
+    expect(f.machineFeatures).toEqual(['Cadence']);
+    expect(f.rawMachineFeatures).toBe(0xfffe0002);
+  });
 });
 
 describe('parseTrainingStatus', () => {
@@ -59,6 +75,10 @@ describe('parseTrainingStatus', () => {
     expect(parseTrainingStatus(fromHex('00 0d'))).toEqual({ status: 0x0d, name: 'Manual Mode (Quick Start)', extendedString: false });
     const withText = parseTrainingStatus(new Uint8Array([0x01, 0x04, ...new TextEncoder().encode('Sprint')]));
     expect(withText).toMatchObject({ status: 4, name: 'High Intensity Interval', text: 'Sprint' });
+  });
+
+  it('names reserved values and reports an extended string', () => {
+    expect(parseTrainingStatus(fromHex('02 20'))).toEqual({ status: 0x20, name: 'Reserved (0x20)', extendedString: true });
   });
 });
 
@@ -68,6 +88,14 @@ describe('parseMachineStatus', () => {
     expect(parseMachineStatus(fromHex('02 02'))).toMatchObject({ opCode: 2, stopOrPause: 'pause' });
     expect(parseMachineStatus(fromHex('04')).name).toBe('Started or Resumed by the User');
     expect(parseMachineStatus(fromHex('ff')).name).toBe('Control Permission Lost');
+  });
+
+  it('keeps parameters of op codes it does not interpret and names reserved ones', () => {
+    const s = parseMachineStatus(fromHex('08 2c 01'));
+    expect(s).toMatchObject({ opCode: 0x08, name: 'Target Power Changed' });
+    expect([...s.parameter]).toEqual([0x2c, 0x01]);
+    expect(parseMachineStatus(fromHex('30')).name).toBe('Reserved (0x30)');
+    expect(parseMachineStatus(fromHex('02')).stopOrPause).toBeUndefined();
   });
 });
 

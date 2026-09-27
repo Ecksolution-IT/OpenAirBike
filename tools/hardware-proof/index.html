@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenAirBike · Hardware proof</title>
+    <link rel="icon" href="../../icon.svg" type="image/svg+xml" />
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 1rem; max-width: 70rem; }
+      h1 { font-size: 1.3rem; }
+      h2 { font-size: 1rem; margin: 1.2rem 0 0.3rem; }
+      button { margin: 0 0.4rem 0.4rem 0; padding: 0.4rem 0.8rem; }
+      pre { background: #f4f4f4; padding: 0.6rem; overflow-x: auto; font-size: 0.8rem; margin: 0; white-space: pre-wrap; }
+      #log { max-height: 24rem; overflow-y: auto; }
+      .warn { color: #a00; }
+    </style>
+  </head>
+  <body>
+    <h1>OpenAirBike · Hardware proof (Milestone 0)</h1>
+    <p>
+      Developer tool: find an FTMS bike, list its GATT services, read its features and decode Indoor Bike Data.
+      Chrome or Edge with Web Bluetooth; nothing is stored. See <code>docs/product/milestone-0-hardware-proof.md</code>.
+    </p>
+    <p id="unsupported" class="warn" hidden>This browser has no Web Bluetooth. Use Chrome or Edge (desktop or Android) over HTTPS or localhost.</p>
+
+    <div>
+      <button id="scan-ftms" title="Only devices that advertise the Fitness Machine Service UUID">Scan: FTMS service</button>
+      <button id="scan-names" title="Only devices whose name starts with a known profile prefix (Echo, Rogue)">Scan: Echo / Rogue names</button>
+      <button id="scan-all" title="Every nearby device">Scan: all devices</button>
+      <button id="disconnect" disabled>Disconnect</button>
+      <label><input type="checkbox" id="raw" checked /> Log raw packets (hex, kept in capture)</label>
+      <button id="download" disabled>Download capture</button>
+    </div>
+
+    <h2>Status</h2>
+    <pre id="status">Not connected.</pre>
+    <h2>Device and profile</h2>
+    <pre id="device">–</pre>
+    <h2>GATT services and characteristics</h2>
+    <pre id="gatt">–</pre>
+    <h2>FTMS features</h2>
+    <pre id="features">–</pre>
+    <h2>Telemetry (last complete Indoor Bike Data record, canonical units)</h2>
+    <pre id="telemetry">–</pre>
+    <h2>Packet log</h2>
+    <pre id="log"></pre>
+    <h2>FTMS conformance</h2>
+    <pre id="conformance">–</pre>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

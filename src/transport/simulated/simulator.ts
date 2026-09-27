@@ -1,7 +1,16 @@
 import { ByteWriter } from '../../protocol/ftms/bytes';
 import { encodeIndoorBikeData, type IndoorBikeData } from '../../protocol/ftms/indoorBikeData';
 import { DEVICE_INFORMATION_SERVICE, DeviceInformationCharacteristic, FTMS_SERVICE, FtmsCharacteristic } from '../../protocol/ftms/uuids';
-import { Transport, type CharacteristicInfo, type ConnectionState, type GattLink, type SessionSetup } from '../types';
+import { uuid16 } from '../../util/bleUuid';
+import {
+  Transport,
+  type CharacteristicInfo,
+  type CharacteristicProperty,
+  type ConnectionState,
+  type GattLink,
+  type GattServiceInventory,
+  type SessionSetup,
+} from '../types';
 
 export interface SimulatorOptions {
   /** Notification interval in ms. FTMS suggests about once per second (§4.9.1). */
@@ -41,6 +50,16 @@ const GATT: Record<number, Record<number, { props: Omit<CharacteristicInfo, 'uui
   },
 };
 
+function inventory(): GattServiceInventory[] {
+  return Object.entries(GATT).map(([service, chars]) => ({
+    uuid: uuid16(Number(service)),
+    characteristics: Object.entries(chars).map(([uuid, c]) => ({
+      uuid: uuid16(Number(uuid)),
+      properties: (['read', 'notify', 'indicate'] as const).filter((p) => c.props[p]) as CharacteristicProperty[],
+    })),
+  }));
+}
+
 /**
  * Transport fake for a simulated air bike. It exposes a small GATT database and emits genuine
  * Indoor Bike Data bytes, so the adapter, telemetry and recording run exactly as with hardware.
@@ -74,6 +93,7 @@ export class SimulatedTransport extends Transport {
 
   async connect(setup: SessionSetup): Promise<void> {
     const link: GattLink = {
+      inventory: async () => inventory(),
       characteristics: async (service) => {
         const chars = GATT[service];
         return chars && Object.entries(chars).map(([uuid, c]) => ({ uuid: Number(uuid), ...c.props }));
