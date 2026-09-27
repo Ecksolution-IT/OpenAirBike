@@ -3,8 +3,14 @@
 Legend: **verified** = checked against hardware or a primary source · **reported** = a reference
 project states it · **assumption** = our inference, to be checked.
 
-No OpenAirBike packet capture from a real Echo Bike V3 exists yet. Everything below that is not
-marked verified must be confirmed with one (Diagnostics → Download packet capture).
+No OpenAirBike packet capture from a real Echo Bike V3 exists yet (status 2026-09-27). Everything
+below that is not marked verified must be confirmed with one — use the hardware-proof tool and its
+test plan ([../product/milestone-0-hardware-proof.md](../product/milestone-0-hardware-proof.md)).
+
+What the browser can and cannot show (verified, Web Bluetooth behaviour): only services named in
+the chooser request are visible (the tool asks for FTMS, DIS, HR, Battery, Cycling Power, CSC — a
+vendor service would stay hidden); the chooser exposes no advertisement data, so "advertises the
+FTMS UUID" is answered by whether the bike appears in the tool's *FTMS service* chooser mode.
 
 ## Connection
 
@@ -38,7 +44,7 @@ marked verified must be confirmed with one (Diagnostics → Download packet capt
 | R3 | Which Fitness Machine Feature bits are set | Which metrics to show; conformance panel | Capture |
 | R4 | Does the console reset its counters when it goes idle or when the rider stops? | Counter-delta logic, session continuity | Ride, pause > 1 min, ride again, capture |
 | R5 | Heart rate: none, via FTMS field, or via a separate HR service? | Live screen layout, optional HR sensor support | Capture with and without a paired strap |
-| R6 | Control Point present? If yes, does it accept Request Control / Start / Stop? | Candidate for v0.2 (sync console session with workouts) | Capture; later a guarded write test |
+| R6 | Control Point present? If yes, does it accept Request Control / Start / Stop? | Later: sync console start/stop with sessions ([mvp.md](../product/mvp.md)) | Capture; later a guarded write test |
 | R7 | Firmware / model strings in Device Information Service | Device profile identification | Capture |
 
 Further questions R8–R13 (setup timing, Control Point responses, notification rate, session after

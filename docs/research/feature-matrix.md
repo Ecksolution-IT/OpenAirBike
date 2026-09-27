@@ -25,7 +25,7 @@ Columns: **bridge** = rogue_garmin_bridge · **tracker** = Rogue_Echo_Bike_v3 ·
 | Web Bluetooth (browser, no install) | – | – | – | – | – | ✅ | MVP |
 | External HR strap as second device | – | ◐ optional 0x2A37 | ✅ | – | – | – | Later |
 | Passive availability probe / status dots | – | – | ✅ | – | – | – | Later |
-| Full GATT dump of all characteristics | – | – | – | – | ✅ | ◐ FTMS only | Later (capture v1) |
+| Full GATT dump of all characteristics | – | – | – | – | ✅ | ✅ hardware-proof tool (named services only) | MVP (Milestone 0) |
 
 ## FTMS
 
@@ -127,7 +127,7 @@ Columns: **bridge** = rogue_garmin_bridge · **tracker** = Rogue_Echo_Bike_v3 ·
 
 | Feature | bridge | tracker | ewoc | ftms | toolkit | OAB | Relevance |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Packet capture | ◐ hex log | – | ◐ payload preview | – | ✅ dump | ✅ download | MVP |
+| Packet capture | ◐ hex log | – | ◐ payload preview | – | ✅ dump | ✅ app download + tool capture (draft) | MVP |
 | Replay of a capture as a device | – | – | – | – | – | – | Later (early v0.2, S4) |
 | Raw packets kept per session | – | – | – | – | – | – | Later (S1) |
 

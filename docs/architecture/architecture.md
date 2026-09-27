@@ -1,6 +1,7 @@
 # OpenAirBike target architecture (minimal)
 
-Status: proposal, 2026-09-27. No implementation. Based on `docs/research/`
+Status: target architecture, 2026-09-27. Accepted parts are ADRs 0001–0008 and implemented; the
+module renames/moves and the designs linked below are not implemented yet. Based on `docs/research/`
 ([architecture-gap](../research/architecture-gap.md), [ftms-ble-analysis](../research/ftms-ble-analysis.md),
 [workout-engine-analysis](../research/workout-engine-analysis.md),
 [recording-storage-analysis](../research/recording-storage-analysis.md),
@@ -36,6 +37,7 @@ Status: proposal, 2026-09-27. No implementation. Based on `docs/research/`
 | 12 | **Integrations** `integrations/` | File formats in and out: session JSON/CSV (today), FIT, workout file, ZWO import, (later) benchmark/workout sharing links. Pure transformations `domain ⇄ bytes/text`. Garmin = FIT file only. | network calls (none planned), UI |
 | – | `shared/` | Tiny pure helpers used everywhere: emitter, `Clock` port, UUID helpers, units. | anything domain-specific |
 | – | `main.ts` | Composition root: builds adapters, repositories and the application. | logic |
+| – | `tools/*` (outside `src/`) | Developer tools with their own composition root, e.g. `tools/hardware-proof/`. May import any `src/` module except `app`/`ui`; nothing in `src/` imports `tools/`. | product features |
 
 Rogue-specific code exists in exactly one place: `device/profiles/echoBikeV3.ts` (plus captures in
 `test/fixtures/captures/`).
@@ -197,6 +199,7 @@ openairbike/
 │  ├─ integrations/        sessionExport.ts (JSON/CSV) (+ fit/, workoutFile.ts, zwo.ts later)
 │  ├─ app/                 app.ts (facade) + use-case files when app.ts grows (connection, session, workout, history, diagnostics)
 │  └─ ui/                  views, i18n, format, dom, style.css
+├─ tools/hardware-proof/   Milestone 0 developer page (probe, decoder, capture) — exists
 ├─ test/                   mirrors src; architecture.test.ts; fixtures/{third-party,captures}/
 └─ docs/                   architecture/, research/, decisions.md, ftms-notes.md
 ```

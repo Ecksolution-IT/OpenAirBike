@@ -62,7 +62,7 @@ Consequences for the app:
 
 Per ICS Table 12, a server with a Control Point must support Request Control, Reset, Start or
 Resume, Stop, Pause and Procedure Complete. OpenAirBike v0.1 is read-only and does not write to the
-Control Point. It is a candidate for v0.2 (e.g. starting and stopping the bike's session together
-with a structured workout) **if** the Echo Bike V3 exposes it; the characteristic list in
-Diagnostics shows whether it does. An air bike has no controllable resistance, so target settings
+Control Point. Start/stop sync with the console is a *Later* item ([product/mvp.md](product/mvp.md))
+**if** the Echo Bike V3 exposes and accepts it (R6/R10); the hardware-proof tool's GATT list shows
+whether it exists. An air bike has no controllable resistance, so target settings
 (power, resistance, simulation) are not expected.

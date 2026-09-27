@@ -47,10 +47,9 @@ Measured in headless Chromium (Playwright build 1194), dev server and production
 
 ## Consequences for step 7 (persistence)
 
-1. **Single-tab ownership.** Only one tab can own the database. The app must detect this and say
-   so instead of failing obscurely. Proposal: take a Web Lock (`navigator.locks`) named after the
-   database before opening it; a second tab shows "OpenAirBike is already open in another tab".
-   Assumption: `navigator.locks` is available wherever Web Bluetooth is (Chromium) — to verify.
+1. **Single-tab ownership.** Only one tab can own the database. Implemented: a Web Lock
+   (`openairbike-database`) is taken before opening; a second tab shows a "database in use" message
+   (`DatabaseLockedError`, `src/persistence/sqlite/client.ts`; verified in headless Chromium).
 2. All database work stays in one dedicated worker (already the plan).
 3. The WASM file (~0.4 MB gzip) should be loaded only when storage is first needed, so the live
    screen does not wait for it.

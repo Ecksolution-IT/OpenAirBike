@@ -68,13 +68,8 @@ local process. Options:
 | **B. Local service + web UI** | Local process (Node or Python) does BLE and writes an SQLite file; browser shows the UI via localhost | Real `.sqlite` file the user owns; headless recording (e.g. Raspberry Pi next to the bike) | Native BLE libraries per OS, installation, two processes, BLE stack rewrite |
 | C. Desktop shell | Tauri/Electron around the web app | File-based SQLite and BLE in one app | Adds a framework (against the "no unnecessary frameworks" rule) |
 
-Recommendation (to be confirmed): **A** for the first technical goal. It changes only the
-persistence layer and keeps everything else. The persistence layer is defined by repository
-interfaces, so **B** remains possible later without touching domain, recording or UI.
-
-Assumptions: A4 — "SQLite" is wanted for a relational, queryable, portable data format, not
-because a specific runtime is required. A5 — Chrome/Edge (already required for Web Bluetooth)
-support OPFS with synchronous access handles in a worker. Both need confirmation before building.
+**Decided: A** (D1, [ADR 0007](../architecture/adr/0007-sqlite-in-browser.md)); A5 verified by
+[spike 1](spike-sqlite-opfs.md). B remains possible later behind the repository interfaces.
 
 ## SQLite schema sketch (not implemented)
 
