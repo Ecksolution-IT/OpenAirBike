@@ -28,6 +28,7 @@ class FakeTransport extends Transport {
 
   async connect(setup: SessionSetup) {
     const link: GattLink = {
+      inventory: async () => [],
       characteristics: async (service) =>
         this.gatt[service] &&
         Object.entries(this.gatt[service]).map(([uuid, c]) => ({ uuid: Number(uuid), read: true, notify: true, indicate: false, ...c.props })),

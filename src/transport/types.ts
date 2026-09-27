@@ -15,6 +15,23 @@ export interface CharacteristicInfo {
   indicate: boolean;
 }
 
+export type CharacteristicProperty =
+  | 'broadcast'
+  | 'read'
+  | 'writeWithoutResponse'
+  | 'write'
+  | 'notify'
+  | 'indicate'
+  | 'authenticatedSignedWrites'
+  | 'reliableWrite'
+  | 'writableAuxiliaries';
+
+/** One primary service with its characteristics, as full 128-bit UUID strings (lower case). */
+export interface GattServiceInventory {
+  uuid: string;
+  characteristics: { uuid: string; properties: CharacteristicProperty[] }[];
+}
+
 /** A characteristic notification or indication, before any parsing. */
 export interface GattNotification {
   service: number;
@@ -26,6 +43,11 @@ export interface GattNotification {
 
 /** GATT operations available while connected. */
 export interface GattLink {
+  /**
+   * All primary services the device exposes *and* the page may access, with their
+   * characteristics. With Web Bluetooth only services named in the chooser request are visible.
+   */
+  inventory(): Promise<GattServiceInventory[]>;
   /** Characteristics of a primary service, or undefined if the device lacks the service. */
   characteristics(service: number): Promise<CharacteristicInfo[] | undefined>;
   read(service: number, characteristic: number): Promise<DataView>;

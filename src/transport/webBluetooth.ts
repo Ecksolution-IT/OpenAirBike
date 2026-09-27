@@ -2,9 +2,11 @@ import { shortUuid, uuid16 } from '../util/bleUuid';
 import {
   Transport,
   type CharacteristicInfo,
+  type CharacteristicProperty,
   type ConnectionState,
   type DeviceFilter,
   type GattLink,
+  type GattServiceInventory,
   type SessionSetup,
 } from './types';
 
@@ -24,6 +26,31 @@ export async function requestDevice(filter: DeviceFilter): Promise<BluetoothDevi
     ],
     optionalServices: [...new Set([...filter.services, ...filter.optionalServices])].map(uuid16),
   });
+}
+
+/**
+ * Opens the chooser without any filter, listing every nearby device. Only the given services
+ * can be accessed after connecting (Web Bluetooth requires them to be named up front).
+ */
+export async function requestAnyDevice(optionalServices: number[]): Promise<BluetoothDevice> {
+  return navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: optionalServices.map(uuid16) });
+}
+
+const PROPERTIES: CharacteristicProperty[] = [
+  'broadcast',
+  'read',
+  'writeWithoutResponse',
+  'write',
+  'notify',
+  'indicate',
+  'authenticatedSignedWrites',
+  'reliableWrite',
+  'writableAuxiliaries',
+];
+
+/** The properties a characteristic declares, in the order of the Bluetooth Core specification. */
+export function propertyList(props: Partial<Record<CharacteristicProperty, boolean>>): CharacteristicProperty[] {
+  return PROPERTIES.filter((p) => props[p]);
 }
 
 /**
@@ -80,6 +107,20 @@ class WebBluetoothLink implements GattLink {
     const c = (await this.service(service))?.get(characteristic);
     if (!c) throw new Error(`Characteristic 0x${characteristic.toString(16)} not found in service 0x${service.toString(16)}.`);
     return c;
+  }
+
+  async inventory(): Promise<GattServiceInventory[]> {
+    const result: GattServiceInventory[] = [];
+    for (const s of await this.server.getPrimaryServices()) {
+      let characteristics: GattServiceInventory['characteristics'] = [];
+      try {
+        characteristics = (await s.getCharacteristics()).map((c) => ({ uuid: c.uuid.toLowerCase(), properties: propertyList(c.properties) }));
+      } catch {
+        // A service without accessible characteristics is still worth listing.
+      }
+      result.push({ uuid: s.uuid.toLowerCase(), characteristics });
+    }
+    return result;
   }
 
   async characteristics(service: number): Promise<CharacteristicInfo[] | undefined> {

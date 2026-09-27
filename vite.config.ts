@@ -10,6 +10,15 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  build: {
+    rolldownOptions: {
+      // The app, plus the Milestone 0 hardware-proof developer tool as a separate page.
+      input: {
+        main: 'index.html',
+        hardwareProof: 'tools/hardware-proof/index.html',
+      },
+    },
+  },
   test: {
     include: ['test/**/*.test.ts'],
   },

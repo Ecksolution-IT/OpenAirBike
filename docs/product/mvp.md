@@ -29,7 +29,7 @@ Everything else is Next, Later or Research — including features that already e
 | View summary | summary right after stop; session list to reopen it after a restart | built |
 | *Enabler* | packet capture download + conformance diagnostics (needed for hardware validation) | built |
 | *Enabler* | simulated bike + automated tests in CI (typecheck, unit/contract tests, build) | built |
-| *Enabler* | Echo profile confirmed from a real capture (R1–R7) | **open** |
+| *Enabler* | Echo profile confirmed from a real capture (R1–R7) | **open**; tool ready: [milestone-0-hardware-proof.md](milestone-0-hardware-proof.md) |
 
 Consequence: the MVP is **code-complete but not accepted**. What remains is validation on a real
 Echo Bike V3 and the measurements in the acceptance criteria below.
